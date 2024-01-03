@@ -27,7 +27,8 @@ class TalentSerializer(serializers.ModelSerializer):
         model = Talent
         fields = [
             "id",
-            "name",
+            "username",
+            "global_name",
             "timezone",
             "language",
             "about_me",

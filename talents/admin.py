@@ -5,7 +5,7 @@ from .models import Talent, Review, Experience, UniqueProfileVisit
 # Register your models here.
 @admin.register(Talent)
 class TalentAdmin(admin.ModelAdmin):
-    list_display = ("name", "timezone", "language", "profile_visits")
+    list_display = ("username", "timezone", "language", "profile_visits", "date_joined")
 
 
 admin.site.register(Review)

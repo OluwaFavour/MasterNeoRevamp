@@ -12,5 +12,6 @@ def index(request, format=None):
         {
             "message": "Hello, World!, this is the index page.",
             "api": reverse("api-root", request=request, format=format),
+            "discord_login": reverse("discord-login", request=request, format=format),
         }
     )

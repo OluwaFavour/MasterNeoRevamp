@@ -5,7 +5,10 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 # Create your models here.
 class Talent(models.Model):
-    name = models.CharField(max_length=200)
+    id = models.BigIntegerField(primary_key=True)
+    avatar = models.CharField(max_length=200)
+    username = models.CharField(max_length=200)
+    global_name = models.CharField(max_length=200)
     timezone = TimeZoneField(
         default="UTC", choices_display="WITH_GMT_OFFSET", use_pytz=True
     )
@@ -18,6 +21,7 @@ class Talent(models.Model):
     twitter_profile = models.CharField(max_length=200, null=True, blank=True)
     phone_number = PhoneNumberField(blank=True)
     date_joined = models.DateTimeField(auto_now=True, editable=False)
+    last_login = models.DateTimeField(editable=False)
 
     def increment_profile_visits(self):
         self.profile_visits += 1
