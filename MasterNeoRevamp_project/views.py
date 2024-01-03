@@ -1,0 +1,16 @@
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework.reverse import reverse
+
+
+@api_view(["GET"])
+def index(request, format=None):
+    """
+    API endpoint for the index page.
+    """
+    return Response(
+        {
+            "message": "Hello, World!, this is the index page.",
+            "api": reverse("api-root", request=request, format=format),
+        }
+    )
