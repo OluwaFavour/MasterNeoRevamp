@@ -1,5 +1,5 @@
 venv/
 __pycache__/
-media/
+images/
 migrations/
 db.sqlite3
