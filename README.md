@@ -33,4 +33,4 @@ Contributions are welcome! Please follow the guidelines in [CONTRIBUTING.md](CON
 
 ## License
 
-This project is licensed under the [MIT License](/path/to/license).
+This project is licensed under the [MIT License](LICENSE).
