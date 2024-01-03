@@ -14,7 +14,7 @@ class Talent(models.Model):
     summary = models.TextField()
     profile_visits = models.PositiveIntegerField(default=0, editable=False)
     email = models.EmailField(max_length=200, null=True, blank=True)
-    disord_profile = models.CharField(max_length=200)
+    disord_profile = models.CharField(max_length=200, null=True, blank=True)
     twitter_profile = models.CharField(max_length=200, null=True, blank=True)
     phone_number = PhoneNumberField(blank=True)
     date_joined = models.DateTimeField(auto_now=True, editable=False)
