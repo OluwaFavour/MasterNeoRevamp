@@ -23,12 +23,14 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
     SpectacularRedocView,
 )
+from oauth2.views import get_authenticated_user
 from .views import index
 
 
 urlpatterns = [
     path("", index, name="index"),
     path("admin/", admin.site.urls),
+    path("user", get_authenticated_user, name="get-authenticated-user"),
     path("oauth2/", include("oauth2.urls")),
     path("api/", include("api.urls")),
     path("api/auth/", include("rest_framework.urls")),

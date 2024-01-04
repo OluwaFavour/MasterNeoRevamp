@@ -10,19 +10,21 @@ CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 REDIRECT_URI = os.getenv("REDIRECT_URI")
 
+
 def get_language_from_locale(locale: str) -> str:
     # Path to locale.json: oauth2/locale.json
     file_path = "oauth2/locale.json"
-    
+
     # Open locale.json and load the contents into a dictionary
-    with open(file_path, "r", encoding='utf-8') as locale_file:
+    with open(file_path, "r", encoding="utf-8") as locale_file:
         locale_data = json.load(locale_file)
-    
+
     # Get the language from the locale
     language = locale_data.get(locale).split(",")[0]
     return language
 
-def exchange_code(code: str):
+
+def exchange_code(code: str) -> dict | Response:
     data = {
         "grant_type": "authorization_code",
         "code": code,
@@ -46,17 +48,17 @@ def exchange_code(code: str):
         return credentials
 
 
-def get_access_token(credentials: dict):
+def get_access_token(credentials: dict) -> str:
     access_token = credentials.get("access_token")
     return access_token
 
 
-def get_refresh_token(credentials: dict):
+def get_refresh_token(credentials: dict) -> str:
     refresh_token = credentials.get("refresh_token")
     return refresh_token
 
 
-def refresh_credentials(refresh_token: str):
+def refresh_credentials(refresh_token: str) -> dict | Response:
     data = {
         "grant_type": "refresh_token",
         "refresh_token": refresh_token,
@@ -89,7 +91,7 @@ def revoke_access_token(access_token: str):
     )
 
 
-def get_user(access_token: str):
+def get_user(access_token: str) -> dict:
     try:
         response = requests.get(
             f"{API_ENDPOINT}/users/@me",
@@ -100,3 +102,11 @@ def get_user(access_token: str):
     else:
         user = response.json()
         return user
+
+
+def get_avatar_url(user: dict) -> str:
+    avatar_hash = user.get("avatar")
+    avatar_url = (
+        f"https://cdn.discordapp.com/avatars/{user.get('id')}/{avatar_hash}.webp"
+    )
+    return avatar_url

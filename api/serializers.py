@@ -28,6 +28,7 @@ class TalentSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "username",
+            "avatar",
             "global_name",
             "timezone",
             "language",
@@ -35,9 +36,33 @@ class TalentSerializer(serializers.ModelSerializer):
             "summary",
             "profile_visits",
             "email",
-            "disord_profile",
+            "discord_profile",
             "twitter_profile",
             "phone_number",
+        ]
+
+
+class UsernameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Talent
+        fields = [
+            "username",
+        ]
+
+
+class AboutMeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Talent
+        fields = [
+            "about_me",
+        ]
+
+
+class SummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Talent
+        fields = [
+            "summary",
         ]
 
 

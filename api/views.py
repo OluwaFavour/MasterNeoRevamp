@@ -1,12 +1,16 @@
 from talents.models import Talent, Review, Experience
 from jobs.models import Job
 from .serializers import (
+    AboutMeSerializer,
     JobSerializer,
+    SummarySerializer,
     TalentSerializer,
     ExperienceSerializer,
     ReviewSerializer,
+    UsernameSerializer,
 )
 from rest_framework import generics
+from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
@@ -46,7 +50,7 @@ class TalentList(generics.ListCreateAPIView):
     serializer_class = TalentSerializer
 
 
-class TalentDetail(generics.RetrieveUpdateDestroyAPIView):
+class TalentDetail(generics.RetrieveDestroyAPIView):
     # Retrieve, update, and delete individual talent instances
     queryset = Talent.objects.all()
     serializer_class = TalentSerializer
@@ -64,6 +68,48 @@ class TalentDetail(generics.RetrieveUpdateDestroyAPIView):
         if session_key:
             instance.increment_unique_visits(session_key)
         return super().retrieve(request, *args, **kwargs)
+
+
+@api_view(["PATCH"])
+def about_me(request, pk, format=None):
+    try:
+        talent = Talent.objects.get(pk=pk)
+    except Talent.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = AboutMeSerializer(talent, data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["PATCH"])
+def summary(request, pk, format=None):
+    try:
+        talent = Talent.objects.get(pk=pk)
+    except Talent.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = SummarySerializer(talent, data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["PATCH"])
+def username(request, pk, format=None):
+    try:
+        talent = Talent.objects.get(pk=pk)
+    except Talent.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = UsernameSerializer(talent, data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # Views for Experience endpoints

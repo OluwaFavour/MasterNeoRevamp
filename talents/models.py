@@ -1,12 +1,15 @@
 from django.db import models
 from timezone_field import TimeZoneField
 from phonenumber_field.modelfields import PhoneNumberField
+from oauth2.managers import TalentOauth2Manager
 
 
 # Create your models here.
 class Talent(models.Model):
+    objects = TalentOauth2Manager()
+
     id = models.BigIntegerField(primary_key=True)
-    avatar = models.CharField(max_length=200)
+    avatar = models.URLField(max_length=200)
     username = models.CharField(max_length=200)
     global_name = models.CharField(max_length=200)
     timezone = TimeZoneField(
@@ -17,11 +20,12 @@ class Talent(models.Model):
     summary = models.TextField()
     profile_visits = models.PositiveIntegerField(default=0, editable=False)
     email = models.EmailField(max_length=200, null=True, blank=True)
-    disord_profile = models.CharField(max_length=200, null=True, blank=True)
+    discord_profile = models.CharField(max_length=200, null=True, blank=True)
     twitter_profile = models.CharField(max_length=200, null=True, blank=True)
     phone_number = PhoneNumberField(blank=True)
     date_joined = models.DateTimeField(auto_now=True, editable=False)
-    last_login = models.DateTimeField(editable=False)
+    last_login = models.DateTimeField(editable=False, null=True, blank=True)
+    is_active = models.BooleanField(default=True)
 
     def increment_profile_visits(self):
         self.profile_visits += 1
@@ -32,8 +36,11 @@ class Talent(models.Model):
             self.uniqueprofilevisit_set.create(session_key=session_key)
             self.increment_profile_visits()
 
+    def is_authenticated(self, request):
+        return True
+    
     def __str__(self):
-        return self.name
+        return self.username
 
 
 class UniqueProfileVisit(models.Model):
