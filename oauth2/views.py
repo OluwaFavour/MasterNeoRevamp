@@ -87,10 +87,14 @@ class RefreshTokenView(APIView):
         """
         auth = DiscordAuthentication()
         refresh_token = request.headers.get("Authorization")
-        if not refresh_token or not refresh_token.startswith("Bearer "):
+        if not refresh_token:
+            return Response(
+                {"error": "Authorization header is required"}, status=400
+            )
+        elif not refresh_token.startswith("Bearer "):
             return Response(
                 {"error": "Bearer token is required in Authorization header"},
-                status=400,
+                status=401,
             )
         else:
             refresh_token = refresh_token.split(" ")[1]
@@ -121,10 +125,14 @@ class RevokeTokenView(APIView):
         """
         auth = DiscordAuthentication()
         access_token = request.headers.get("Authorization")
-        if not access_token or not access_token.startswith("Bearer "):
+        if not access_token:
+            return Response(
+                {"error": "Authorization header is required"}, status=400
+            )
+        elif not access_token.startswith("Bearer "):
             return Response(
                 {"error": "Bearer token is required in Authorization header"},
-                status=400,
+                status=401,
             )
         access_token = access_token.split(" ")[1]
         if access_token is None:
