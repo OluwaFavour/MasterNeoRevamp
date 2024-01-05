@@ -136,10 +136,6 @@ DATABASES = {
 # Authentication backends
 # https://docs.djangoproject.com/en/5.0/ref/settings/#authentication-backends
 
-AUTHENTICATION_BACKENDS = [
-    "oauth2.auth.DiscordAuthenticationBackend",
-]
-
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
