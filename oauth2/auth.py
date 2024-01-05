@@ -51,7 +51,7 @@ class DiscordAuthentication(BaseAuthentication):
                 talent = Talent.objects.create_talent(user)
             return (talent, None)
 
-    def get_access_token(self, code) -> tuple:
+    def get_access_token(self, code: str) -> tuple:
         """
         Retrieves the access token, refresh token, and expiration time for the given authorization code.
 
@@ -75,7 +75,7 @@ class DiscordAuthentication(BaseAuthentication):
         except Exception as e:
             raise AuthenticationFailed(f"{e}")
 
-    def refresh_token(self, refresh_token) -> tuple:
+    def refresh_token(self, refresh_token: str) -> tuple:
         """
         Refreshes the access token using the provided refresh token.
 
@@ -96,7 +96,7 @@ class DiscordAuthentication(BaseAuthentication):
         except Exception as e:
             raise AuthenticationFailed(f"{e}")
 
-    def revoke_token(self, access_token) -> bool:
+    def revoke_token(self, access_token: str) -> bool:
         """
         Revoke the specified access token.
 

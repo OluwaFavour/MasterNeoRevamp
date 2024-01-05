@@ -11,13 +11,14 @@ from .serializers import (
 )
 from rest_framework import generics
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, authentication_classes
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 
 
 # Define an API root view to display available endpoints
 @api_view(["GET"])
+@authentication_classes([])
 def api_root(request, format=None):
     # Return a response with available API endpoints
     return Response(
@@ -35,25 +36,33 @@ class JobList(generics.ListCreateAPIView):
     # List and create job instances
     queryset = Job.objects.all()
     serializer_class = JobSerializer
+    authentication_classes = []
 
 
 class JobDetail(generics.RetrieveUpdateDestroyAPIView):
     # Retrieve, update, and delete individual job instances
     queryset = Job.objects.all()
     serializer_class = JobSerializer
+    authentication_classes = []
 
 
 # Views for Talent endpoints
-class TalentList(generics.ListCreateAPIView):
+class TalentList(generics.ListAPIView):
     # List and create talent instances
     queryset = Talent.objects.all()
     serializer_class = TalentSerializer
+    authentication_classes = []
 
 
 class TalentDetail(generics.RetrieveDestroyAPIView):
     # Retrieve, update, and delete individual talent instances
     queryset = Talent.objects.all()
     serializer_class = TalentSerializer
+
+    def get_authenticators(self):
+        if self.request.method == "GET":
+            return []
+        return super().get_authenticators()
 
     # Custom retrieve method to handle incrementing unique profile visits
     def retrieve(self, request, *args, **kwargs):
@@ -118,11 +127,21 @@ class ExperienceList(generics.ListCreateAPIView):
     queryset = Experience.objects.all()
     serializer_class = ExperienceSerializer
 
+    def get_authenticators(self):
+        if self.request.method == "GET":
+            return []
+        return super().get_authenticators()
+
 
 class ExperienceDetail(generics.RetrieveUpdateDestroyAPIView):
     # Retrieve, update, and delete individual experience instances
     queryset = Experience.objects.all()
     serializer_class = ExperienceSerializer
+
+    def get_authenticators(self):
+        if self.request.method == "GET":
+            return []
+        return super().get_authenticators()
 
 
 # Views for Review endpoints
@@ -130,9 +149,11 @@ class ReviewList(generics.ListCreateAPIView):
     # List and create review instances
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
+    authentication_classes = []
 
 
-class ReviewDetail(generics.RetrieveUpdateDestroyAPIView):
+class ReviewDetail(generics.RetrieveAPIView):
     # Retrieve, update, and delete individual review instances
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
+    authentication_classes = []

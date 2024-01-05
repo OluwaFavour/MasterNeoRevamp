@@ -15,11 +15,6 @@ from .auth import DiscordAuthentication
 AUTHORIZATION_URL = os.getenv("AUTHORIZATION_URL")
 
 
-@login_required(login_url="oauth2/discord/login/")
-def get_authenticated_user(request):
-    return JsonResponse({"message": "You are authenticated"})
-
-
 def discord_login(request):
     """
     Redirects the user to the Discord authorization URL.
@@ -37,6 +32,8 @@ class DiscordRedirectView(APIView):
     """
     View for handling Discord OAuth2 redirect.
     """
+
+    authentication_classes = []
 
     def get(self, request, format=None) -> Response:
         """
@@ -74,6 +71,8 @@ class RefreshTokenView(APIView):
     API view for refreshing access token using a refresh token.
     """
 
+    authentication_classes = []
+
     def post(self, request, format=None):
         """
         Handle POST requests for refreshing access token.
@@ -84,10 +83,17 @@ class RefreshTokenView(APIView):
 
         Returns:
             Response: The HTTP response containing the new access token and its expiration time.
-            If the refresh token is not provided, an error response is returned.
+            If the authorization header is missing or the refresh token is not provided, an error response is returned.
         """
         auth = DiscordAuthentication()
-        refresh_token = request.data.get("refresh_token")
+        refresh_token = request.headers.get("Authorization")
+        if not refresh_token or not refresh_token.startswith("Bearer "):
+            return Response(
+                {"error": "Bearer token is required in Authorization header"},
+                status=400,
+            )
+        else:
+            refresh_token = refresh_token.split(" ")[1]
         if refresh_token is None:
             return Response({"error": "Refresh token not provided"}, status=400)
         new_access_token, expires_in = auth.refresh_token(refresh_token)
@@ -99,6 +105,8 @@ class RevokeTokenView(APIView):
     API view for revoking an access token.
     """
 
+    authentication_classes = []
+
     def post(self, request, format=None):
         """
         Handle POST requests to revoke an access token.
@@ -109,9 +117,16 @@ class RevokeTokenView(APIView):
 
         Returns:
         - Response: The HTTP response object containing the result of the token revocation.
+        If the authorization header is missing or the access token is not provided, an error response is returned.
         """
         auth = DiscordAuthentication()
-        access_token = request.data.get("access_token")
+        access_token = request.headers.get("Authorization")
+        if not access_token or not access_token.startswith("Bearer "):
+            return Response(
+                {"error": "Bearer token is required in Authorization header"},
+                status=400,
+            )
+        access_token = access_token.split(" ")[1]
         if access_token is None:
             return Response({"error": "Access token not provided"}, status=400)
         is_revoked = auth.revoke_token(access_token)
