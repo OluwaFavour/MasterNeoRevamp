@@ -20,7 +20,7 @@ def get_language_from_locale(locale: str) -> str:
 
     Returns:
         str: The language extracted from the locale.
-    
+
     Raises:
         FileNotFoundError: If the locale.json file is not found in the specified file path.
         AttributeError: If the locale is not found in the locale data.
@@ -129,7 +129,7 @@ def refresh_credentials(
 
     Returns:
         dict: A dictionary containing the refreshed credentials.
-    
+
     Raises:
         requests.exceptions.RequestException: If there is an error making the API request.
     """
@@ -204,7 +204,12 @@ def get_user(authorization: str) -> dict:
         )
     else:
         user = response.json()
-        return user
+        if response.status_code != 200:
+            raise requests.exceptions.RequestException(
+                f"{user.get('message')}", response=response, request=e.request
+            )
+        else:
+            return user
 
 
 def get_avatar_url(user: dict) -> str:
@@ -216,7 +221,7 @@ def get_avatar_url(user: dict) -> str:
 
     Returns:
         str: The URL of the user's avatar image.
-    
+
     Raises:
         ValueError: If the avatar hash is missing from the user data.
     """
