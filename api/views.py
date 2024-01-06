@@ -2,6 +2,7 @@ from talents.models import Talent, Review, Experience
 from jobs.models import Job
 from .serializers import (
     AboutMeSerializer,
+    ExperienceOutputSerializer,
     JobSerializer,
     SummarySerializer,
     TalentSerializer,
@@ -9,6 +10,7 @@ from .serializers import (
     ReviewSerializer,
     UsernameSerializer,
 )
+from .permissions import IsTalentOrReadOnly
 from rest_framework import generics
 from rest_framework import status
 from rest_framework.decorators import api_view, authentication_classes
@@ -47,6 +49,7 @@ class JobList(generics.ListCreateAPIView):
     """
     API endpoint for listing and creating job instances.
     """
+
     queryset = Job.objects.all()
     serializer_class = JobSerializer
     authentication_classes = []
@@ -55,10 +58,11 @@ class JobList(generics.ListCreateAPIView):
 class JobDetail(generics.RetrieveUpdateDestroyAPIView):
     """
     Retrieve, update, and delete individual job instances.
-    
+
     This class-based view allows you to perform CRUD operations on individual job instances.
     It retrieves a single job instance, updates its data, or deletes it from the database.
     """
+
     queryset = Job.objects.all()
     serializer_class = JobSerializer
     authentication_classes = []
@@ -85,6 +89,7 @@ class TalentList(generics.ListAPIView):
 
     Note: Authentication is not required for accessing this endpoint.
     """
+
     queryset = Talent.objects.all()
     serializer_class = TalentSerializer
     authentication_classes = []
@@ -102,6 +107,7 @@ class TalentDetail(generics.RetrieveDestroyAPIView):
         get_authenticators: Returns the authenticators based on the request method.
         retrieve: Custom retrieve method to handle incrementing unique profile visits.
     """
+
     queryset = Talent.objects.all()
     serializer_class = TalentSerializer
 
@@ -220,16 +226,31 @@ class ExperienceList(generics.ListCreateAPIView):
     queryset = Experience.objects.all()
     serializer_class = ExperienceSerializer
 
+    def get_serializer_class(self):
+        if self.request.method == "GET":
+            return ExperienceOutputSerializer
+        return ExperienceSerializer
+
     def get_authenticators(self):
         if self.request.method == "GET":
             return []
         return super().get_authenticators()
+
+    def perform_create(self, serializer):
+        # Set the owner to the user making the request
+        serializer.save(talent=self.request.user)
 
 
 class ExperienceDetail(generics.RetrieveUpdateDestroyAPIView):
     # Retrieve, update, and delete individual experience instances
     queryset = Experience.objects.all()
     serializer_class = ExperienceSerializer
+    permission_classes = [IsTalentOrReadOnly]
+
+    def get_serializer_class(self):
+        if self.request.method == "GET":
+            return ExperienceOutputSerializer
+        return ExperienceSerializer
 
     def get_authenticators(self):
         if self.request.method == "GET":

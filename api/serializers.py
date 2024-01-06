@@ -84,7 +84,22 @@ class ExperienceSerializer(serializers.ModelSerializer):
         model = Experience
         fields = [
             "id",
-            "talent",
+            "project_logo",
+            "company_name",
+            "role",
+            "description",
+            "start_date",
+            "end_date",
+            "currently_working",
+            "discord_profile",
+            "twitter_profile",
+        ]
+
+class ExperienceOutputSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Experience
+        fields = [
+            "id",
             "project_logo",
             "company_name",
             "role",
@@ -93,6 +108,8 @@ class ExperienceSerializer(serializers.ModelSerializer):
             "end_date",
             "currently_working",
             "verified",
-            "twitter_link",
-            "discord_link",
+            "discord_profile",
+            "twitter_profile",
+            "talent",
         ]
+        depth = 1
