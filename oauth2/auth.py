@@ -1,5 +1,6 @@
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
+from requests.exceptions import RequestException
 from oauth2.utils import (
     get_user,
     refresh_credentials,
@@ -39,8 +40,8 @@ class DiscordAuthentication(BaseAuthentication):
 
         try:
             user = get_user(token)
-        except Exception as e:
-            raise AuthenticationFailed(f"Error getting user: {e}")
+        except RequestException as e:
+            raise AuthenticationFailed(e)
         else:
             if user is None:
                 return None
@@ -72,8 +73,8 @@ class DiscordAuthentication(BaseAuthentication):
             refresh_token = f"Bearer {get_refresh_token(credentials)}"
             expires_in = credentials.get("expires_in")
             return access_token, refresh_token, expires_in
-        except Exception as e:
-            raise AuthenticationFailed(f"{e}")
+        except RequestException as e:
+            raise AuthenticationFailed(e)
 
     def refresh_token(self, refresh_token: str) -> tuple:
         """
@@ -93,8 +94,8 @@ class DiscordAuthentication(BaseAuthentication):
             new_access_token = f"Bearer {get_access_token(credentials)}"
             expires_in = credentials.get("expires_in")
             return new_access_token, expires_in
-        except Exception as e:
-            raise AuthenticationFailed(f"{e}")
+        except RequestException as e:
+            raise AuthenticationFailed(e)
 
     def revoke_token(self, access_token: str) -> bool:
         """
@@ -112,5 +113,5 @@ class DiscordAuthentication(BaseAuthentication):
         try:
             is_revoked = revoke_access_token(access_token)
             return is_revoked
-        except Exception as e:
-            raise AuthenticationFailed(f"{e}")
+        except RequestException as e:
+            raise AuthenticationFailed(e)
