@@ -2,7 +2,7 @@ from rest_framework import serializers
 from timezone_field.rest_framework import TimeZoneSerializerField
 
 from jobs.models import Job
-from talents.models import Talent, Review, Experience
+from talents.models import Talent, Review, Experience, Skill
 
 
 class JobSerializer(serializers.ModelSerializer):
@@ -20,8 +20,17 @@ class JobSerializer(serializers.ModelSerializer):
         ]
 
 
+class SkillSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Skill
+        fields = [
+            "name",
+        ]
+
+
 class TalentSerializer(serializers.ModelSerializer):
     timezone = TimeZoneSerializerField(use_pytz=True)
+    skills = serializers.StringRelatedField(many=True)
 
     class Meta:
         model = Talent
@@ -39,6 +48,7 @@ class TalentSerializer(serializers.ModelSerializer):
             "discord_profile",
             "twitter_profile",
             "phone_number",
+            "skills", # Problem Outputs a list of skills pk instead of the skill name
         ]
 
 
@@ -91,9 +101,10 @@ class ExperienceSerializer(serializers.ModelSerializer):
             "start_date",
             "end_date",
             "currently_working",
-            "discord_profile",
-            "twitter_profile",
+            "discord_link",
+            "twitter_link",
         ]
+
 
 class ExperienceOutputSerializer(serializers.ModelSerializer):
     class Meta:
@@ -108,8 +119,7 @@ class ExperienceOutputSerializer(serializers.ModelSerializer):
             "end_date",
             "currently_working",
             "verified",
-            "discord_profile",
-            "twitter_profile",
+            "discord_link",
+            "twitter_link",
             "talent",
         ]
-        depth = 1

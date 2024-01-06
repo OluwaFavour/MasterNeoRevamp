@@ -1,4 +1,4 @@
-from talents.models import Talent, Review, Experience
+from talents.models import Skill, Talent, Review, Experience
 from jobs.models import Job
 from .serializers import (
     AboutMeSerializer,
@@ -9,11 +9,13 @@ from .serializers import (
     ExperienceSerializer,
     ReviewSerializer,
     UsernameSerializer,
+    SkillSerializer,
 )
 from .permissions import IsTalentOrReadOnly
 from rest_framework import generics
 from rest_framework import status
 from rest_framework.decorators import api_view, authentication_classes
+from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 
@@ -112,7 +114,7 @@ class TalentDetail(generics.RetrieveDestroyAPIView):
     serializer_class = TalentSerializer
 
     def get_authenticators(self):
-        if self.request.method == "GET":
+        if self.request is None or self.request.method == "GET":
             return []
         return super().get_authenticators()
 
@@ -220,9 +222,88 @@ def username(request, pk, format=None):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class SkillView(generics.RetrieveUpdateAPIView):
+    """
+    API view for retrieving and updating skills of a talent.
+    """
+
+    serializer_class = SkillSerializer
+
+    def get_authenticators(self):
+        if self.request is None or self.request.method == "GET":
+            return []
+        return super().get_authenticators()
+
+    def get_queryset(self):
+        """
+        Get the queryset of skills for the talent.
+
+        Returns:
+            QuerySet: The queryset of skills.
+
+        Raises:
+            NotFound: If the talent does not exist.
+        """
+        pk = self.kwargs.get("pk")
+        try:
+            talent = Talent.objects.get(pk=pk)
+            if talent != self.request.user and self.request.method != "GET":
+                raise PermissionDenied()
+            return talent.skills
+        except Talent.DoesNotExist:
+            raise NotFound(detail="Talent not found.", code=404)
+
+    def get(self, request, *args, **kwargs):
+        """
+        Retrieve the skills of the talent.
+
+        Returns:
+            Response: The serialized skills data.
+        """
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset.all(), many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request, *args, **kwargs):
+        """
+        Update the skills of the talent.
+
+        Returns:
+            Response: The serialized updated skills data.
+
+        Raises:
+            Response: If the request data is invalid or exceeds the maximum limit.
+        """
+        queryset = self.get_queryset()
+        if len(request.data) > 5:
+            return Response(
+                {"detail": "You can only select a maximum of 5 skills."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        print(
+            request.data
+        )  # Prints <QueryDict: {'name': ['Community manager', 'Moderator']}>
+        data = [{"name": name} for name in request.data.getlist("name")]
+        serializer = self.get_serializer(data=data, many=True)
+        if serializer.is_valid():
+            print(
+                serializer.validated_data
+            )  # prints [] (empty list) instead of [{'name': 'Community manager'}, {'name': 'Moderator'}]
+            queryset.clear()
+            for skill_data in serializer.validated_data:
+                skill, _ = Skill.objects.get_or_create(name=skill_data["name"])
+                queryset.add(skill)
+            serializer = self.get_serializer(queryset.all(), many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 # Views for Experience endpoints
 class ExperienceList(generics.ListCreateAPIView):
-    # List and create experience instances
+    """
+    API endpoint for listing and creating experience instances.
+    """
+
     queryset = Experience.objects.all()
     serializer_class = ExperienceSerializer
 
@@ -232,17 +313,22 @@ class ExperienceList(generics.ListCreateAPIView):
         return ExperienceSerializer
 
     def get_authenticators(self):
-        if self.request.method == "GET":
+        if self.request is None or self.request.method == "GET":
             return []
         return super().get_authenticators()
 
     def perform_create(self, serializer):
-        # Set the owner to the user making the request
+        """
+        Set the owner of the experience to the user making the request.
+        """
         serializer.save(talent=self.request.user)
 
 
 class ExperienceDetail(generics.RetrieveUpdateDestroyAPIView):
-    # Retrieve, update, and delete individual experience instances
+    """
+    API endpoint for retrieving, updating, and deleting individual experience instances.
+    """
+
     queryset = Experience.objects.all()
     serializer_class = ExperienceSerializer
     permission_classes = [IsTalentOrReadOnly]
@@ -253,7 +339,7 @@ class ExperienceDetail(generics.RetrieveUpdateDestroyAPIView):
         return ExperienceSerializer
 
     def get_authenticators(self):
-        if self.request.method == "GET":
+        if self.request is None or self.request.method == "GET":
             return []
         return super().get_authenticators()
 

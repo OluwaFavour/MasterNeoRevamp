@@ -85,6 +85,9 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "THE COMMUNITY FOR COMMUNITY MANAGERS!",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny'],
+    # None will default to DRF's AUTHENTICATION_CLASSES
+    'SERVE_AUTHENTICATION': [],
     "SWAGGER_UI_DIST": "SIDECAR",  # shorthand to use the sidecar instead
     "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
     "REDOC_DIST": "SIDECAR",

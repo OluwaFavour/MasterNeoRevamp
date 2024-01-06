@@ -26,6 +26,7 @@ class Talent(models.Model):
     date_joined = models.DateTimeField(auto_now=True, editable=False)
     last_login = models.DateTimeField(editable=False, null=True, blank=True)
     is_active = models.BooleanField(default=True)
+    skills = models.ManyToManyField("Skill", blank=True)
 
     def increment_profile_visits(self):
         self.profile_visits += 1
@@ -38,10 +39,30 @@ class Talent(models.Model):
 
     def is_authenticated(self, request):
         return True
-    
+
     def __str__(self):
         return self.username
 
+
+class Skill(models.Model):
+    SKILL_CHOICES = [
+        ("Community manager", "Community manager"),
+        ("Collab manager", "Collab manager"),
+        ("Community engagement", "Community engagement"),
+        ("Security expert", "Security expert"),
+        ("Marketer", "Marketer"),
+        ("Moderator", "Moderator"),
+        ("Event planning", "Event planning"),
+        ("Social media management", "Social media management"),
+        ("Influencer", "Influencer"),
+        ("Marketer", "Marketer"),
+        ("Project advisor", "Project advisor"),
+    ]
+
+    name = models.CharField(max_length=200, choices=SKILL_CHOICES, unique=True)
+
+    def __str__(self):
+        return self.name
 
 class UniqueProfileVisit(models.Model):
     talent = models.ForeignKey("Talent", on_delete=models.CASCADE)
