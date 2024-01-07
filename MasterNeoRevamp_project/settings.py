@@ -38,6 +38,7 @@ DEBUG = os.getenv("DEBUG", default=False)
 
 ALLOWED_HOSTS = []
 
+AUTH_USER_MODEL = "jobs.Company"
 
 # Application definition
 
@@ -55,10 +56,13 @@ INSTALLED_APPS = [
     "corsheaders",
     "drf_spectacular",
     "drf_spectacular_sidecar",
+    "rest_framework.authtoken",
+    "djoser",
     # Local
     "jobs.apps.JobsConfig",
     "talents.apps.TalentsConfig",
     "api.apps.ApiConfig",
+    "oauth2.apps.Oauth2Config",
 ]
 
 MIDDLEWARE = [
@@ -76,22 +80,36 @@ MIDDLEWARE = [
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "oauth2.auth.DiscordAuthentication",
+        "rest_framework.authentication.TokenAuthentication",
     ],
 }
 
+# DRF Spectacular
 SPECTACULAR_SETTINGS = {
     "TITLE": "Master Neo Revamp API",
     "DESCRIPTION": "THE COMMUNITY FOR COMMUNITY MANAGERS!",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
-    'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny'],
+    "SERVE_PERMISSIONS": ["rest_framework.permissions.AllowAny"],
     # None will default to DRF's AUTHENTICATION_CLASSES
-    'SERVE_AUTHENTICATION': [],
+    "SERVE_AUTHENTICATION": [],
     "SWAGGER_UI_DIST": "SIDECAR",  # shorthand to use the sidecar instead
     "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
     "REDOC_DIST": "SIDECAR",
     # OTHER SETTINGS
+}
+
+# DJOSER
+DJOSER = {
+    "LOGIN_FIELD": "email",
+    "USER_CREATE_PASSWORD_RETYPE": True,
+    "PASSWORD_CHANGED_EMAIL_CONFIRMATION": False,
+    "SEND_ACTIVATION_EMAIL": False,
+    "SET_PASSWORD_RETYPE": True,
+    "PASSWORD_RESET_CONFIRM_URL": "password/reset/confirm/{uid}/{token}",
+    "USERNAME_RESET_CONFIRM_URL": "email/reset/confirm/{uid}/{token}",
+    "ACTIVATION_URL": "activate/{uid}/{token}",
+    "SERIALIZERS": {},
 }
 
 # CORS
@@ -179,5 +197,3 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-# AUTH_USER_MODEL = "talents.Talent"

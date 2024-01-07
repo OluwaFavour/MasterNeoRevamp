@@ -30,6 +30,8 @@ urlpatterns = [
     path("", index, name="index"),
     path("admin/", admin.site.urls),
     path("oauth2/", include("oauth2.urls")),
+    path("auth/", include("djoser.urls")),
+    path("auth/", include("djoser.urls.authtoken")),
     path("api/", include("api.urls")),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(

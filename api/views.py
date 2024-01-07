@@ -1,3 +1,4 @@
+from oauth2.auth import DiscordAuthentication
 from talents.models import Skill, Talent, Review, Experience
 from jobs.models import Job
 from .serializers import (
@@ -73,7 +74,7 @@ class JobDetail(generics.RetrieveUpdateDestroyAPIView):
 # Views for Talent endpoints
 class TalentList(generics.ListAPIView):
     """
-    API endpoint for listing and creating talent instances.
+    API endpoint for listing talent instances.
 
     Inherits from `generics.ListAPIView` and provides a list view for the `Talent` model.
     The `queryset` attribute is set to retrieve all instances of the `Talent` model.
@@ -82,19 +83,15 @@ class TalentList(generics.ListAPIView):
 
     Usage:
     - GET: Retrieve a list of talent instances.
-    - POST: Create a new talent instance.
 
     Example:
     To retrieve a list of talent instances, send a GET request to this endpoint.
-
-    To create a new talent instance, send a POST request to this endpoint with the required data.
 
     Note: Authentication is not required for accessing this endpoint.
     """
 
     queryset = Talent.objects.all()
     serializer_class = TalentSerializer
-    authentication_classes = []
 
 
 class TalentDetail(generics.RetrieveDestroyAPIView):
@@ -112,6 +109,7 @@ class TalentDetail(generics.RetrieveDestroyAPIView):
 
     queryset = Talent.objects.all()
     serializer_class = TalentSerializer
+    authentication_classes = [DiscordAuthentication]
 
     def get_authenticators(self):
         if self.request is None or self.request.method == "GET":
@@ -142,6 +140,7 @@ class TalentDetail(generics.RetrieveDestroyAPIView):
 
 
 @api_view(["PATCH"])
+@authentication_classes([DiscordAuthentication])
 def about_me(request, pk, format=None):
     """
     Update the 'about me' information of a talent.
@@ -169,6 +168,7 @@ def about_me(request, pk, format=None):
 
 
 @api_view(["PATCH"])
+@authentication_classes([DiscordAuthentication])
 def summary(request, pk, format=None):
     """
     Update the summary of a talent.
@@ -196,6 +196,7 @@ def summary(request, pk, format=None):
 
 
 @api_view(["PATCH"])
+@authentication_classes([DiscordAuthentication])
 def username(request, pk, format=None):
     """
     Update the username of a talent.
@@ -228,6 +229,7 @@ class SkillView(generics.RetrieveUpdateAPIView):
     """
 
     serializer_class = SkillSerializer
+    authentication_classes = [DiscordAuthentication]
 
     def get_authenticators(self):
         if self.request is None or self.request.method == "GET":
@@ -280,22 +282,13 @@ class SkillView(generics.RetrieveUpdateAPIView):
                 {"detail": "You can only select a maximum of 5 skills."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        print(
-            request.data
-        )  # Prints <QueryDict: {'name': ['Community manager', 'Moderator']}>
         data = [{"name": name} for name in request.data.getlist("name")]
-        serializer = self.get_serializer(data=data, many=True)
-        if serializer.is_valid():
-            print(
-                serializer.validated_data
-            )  # prints [] (empty list) instead of [{'name': 'Community manager'}, {'name': 'Moderator'}]
-            queryset.clear()
-            for skill_data in serializer.validated_data:
-                skill, _ = Skill.objects.get_or_create(name=skill_data["name"])
-                queryset.add(skill)
-            serializer = self.get_serializer(queryset.all(), many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        queryset.clear()
+        for skill_data in data:
+            skill, _ = Skill.objects.get_or_create(name=skill_data["name"])
+            queryset.add(skill)
+        serializer = self.get_serializer(queryset.all(), many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 # Views for Experience endpoints
@@ -306,6 +299,7 @@ class ExperienceList(generics.ListCreateAPIView):
 
     queryset = Experience.objects.all()
     serializer_class = ExperienceSerializer
+    authentication_classes = [DiscordAuthentication]
 
     def get_serializer_class(self):
         if self.request.method == "GET":
@@ -332,6 +326,7 @@ class ExperienceDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Experience.objects.all()
     serializer_class = ExperienceSerializer
     permission_classes = [IsTalentOrReadOnly]
+    authentication_classes = [DiscordAuthentication]
 
     def get_serializer_class(self):
         if self.request.method == "GET":
@@ -349,11 +344,9 @@ class ReviewList(generics.ListCreateAPIView):
     # List and create review instances
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
-    authentication_classes = []
 
 
 class ReviewDetail(generics.RetrieveAPIView):
     # Retrieve, update, and delete individual review instances
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
-    authentication_classes = []

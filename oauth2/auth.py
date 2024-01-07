@@ -20,7 +20,7 @@ class DiscordAuthentication(BaseAuthentication):
     refreshing tokens, and revoking tokens.
     """
 
-    def authenticate(self, request) -> Talent:
+    def authenticate(self, request, **kwargs) -> Talent:
         """
         Authenticates the request using the provided token and returns the corresponding Talent object.
 
@@ -33,9 +33,10 @@ class DiscordAuthentication(BaseAuthentication):
         Raises:
             AuthenticationFailed: If the Authorization header is missing or if there is an error getting the user.
         """
-        token = request.headers.get("Authorization")
-
+        token = kwargs.get("token")
         if token is None:
+            token = request.headers.get("Authorization")
+        elif token is None:
             raise AuthenticationFailed("Authorization header is missing")
 
         try:

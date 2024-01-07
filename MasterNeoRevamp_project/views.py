@@ -4,7 +4,6 @@ from rest_framework.reverse import reverse
 
 
 @api_view(["GET"])
-@authentication_classes([])
 def index(request, format=None):
     """
     API endpoint for the index page.

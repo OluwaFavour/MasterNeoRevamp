@@ -33,8 +33,6 @@ class DiscordRedirectView(APIView):
     View for handling Discord OAuth2 redirect.
     """
 
-    authentication_classes = []
-
     def get(self, request, format=None) -> Response:
         """
         Handle GET requests to obtain access token from Discord.
@@ -53,6 +51,7 @@ class DiscordRedirectView(APIView):
 
         auth = DiscordAuthentication()
         access_token, refresh_token, expires_in = auth.get_access_token(code)
+        auth.authenticate(request, token=access_token)
 
         if access_token is None:
             return Response({"error": "Failed to get access token"}, status=400)
@@ -71,8 +70,6 @@ class RefreshTokenView(APIView):
     API view for refreshing access token using a refresh token.
     """
 
-    authentication_classes = []
-
     def post(self, request, format=None):
         """
         Handle POST requests for refreshing access token.
@@ -88,9 +85,7 @@ class RefreshTokenView(APIView):
         auth = DiscordAuthentication()
         refresh_token = request.headers.get("Authorization")
         if not refresh_token:
-            return Response(
-                {"error": "Authorization header is required"}, status=400
-            )
+            return Response({"error": "Authorization header is required"}, status=400)
         elif not refresh_token.startswith("Bearer "):
             return Response(
                 {"error": "Bearer token is required in Authorization header"},
@@ -109,8 +104,6 @@ class RevokeTokenView(APIView):
     API view for revoking an access token.
     """
 
-    authentication_classes = []
-
     def post(self, request, format=None):
         """
         Handle POST requests to revoke an access token.
@@ -126,9 +119,7 @@ class RevokeTokenView(APIView):
         auth = DiscordAuthentication()
         access_token = request.headers.get("Authorization")
         if not access_token:
-            return Response(
-                {"error": "Authorization header is required"}, status=400
-            )
+            return Response({"error": "Authorization header is required"}, status=400)
         elif not access_token.startswith("Bearer "):
             return Response(
                 {"error": "Bearer token is required in Authorization header"},
