@@ -77,12 +77,18 @@ class SummarySerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
+    """
+    Serializer class for the Review model.
+    """
+    talent_username = serializers.CharField(source="talent.username")
+    
     class Meta:
         model = Review
         fields = [
             "id",
-            "talent",
+            "talent_username",
             "reviewer_name",
+            "reviewer_position",
             "reviewer_organization",
             "review",
             "rating",

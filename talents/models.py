@@ -2,6 +2,7 @@ from django.db import models
 from timezone_field import TimeZoneField
 from phonenumber_field.modelfields import PhoneNumberField
 from oauth2.managers import TalentOauth2Manager
+from jobs.models import Company
 
 
 # Create your models here.
@@ -10,7 +11,7 @@ class Talent(models.Model):
 
     id = models.BigIntegerField(primary_key=True)
     avatar = models.URLField(max_length=200)
-    username = models.CharField(max_length=200)
+    username = models.CharField(max_length=200, unique=True)
     global_name = models.CharField(max_length=200)
     timezone = TimeZoneField(
         default="UTC", choices_display="WITH_GMT_OFFSET", use_pytz=True
@@ -79,7 +80,8 @@ class UniqueProfileVisit(models.Model):
 class Review(models.Model):
     talent = models.ForeignKey(Talent, on_delete=models.CASCADE)
     reviewer_name = models.CharField(max_length=200)
-    reviewer_organization = models.CharField(max_length=200)
+    reviewer_position = models.CharField(max_length=200, blank=True, null=True)
+    reviewer_organization = models.OneToOneField(Company, on_delete=models.CASCADE)
     review = models.TextField()
     rating = models.PositiveIntegerField(default=0)
 

@@ -1,6 +1,6 @@
 from oauth2.auth import DiscordAuthentication
 from talents.models import Skill, Talent, Review, Experience
-from jobs.models import Job
+from jobs.models import Job, Company
 from .serializers import (
     AboutMeSerializer,
     ExperienceOutputSerializer,
@@ -13,6 +13,7 @@ from .serializers import (
     SkillSerializer,
 )
 from .permissions import IsTalentOrReadOnly
+from django.conf import settings as djoser_settings
 from rest_framework import generics
 from rest_framework import status
 from rest_framework.decorators import api_view, authentication_classes
@@ -55,7 +56,17 @@ class JobList(generics.ListCreateAPIView):
 
     queryset = Job.objects.all()
     serializer_class = JobSerializer
-    authentication_classes = []
+    authentication_classes = [djoser_settings.TOKEN_MODEL]
+
+    def get_authenticators(self):
+        if self.request is None or self.request.method == "GET":
+            return []
+        return super().get_authenticators()
+
+    def perform_create(self, serializer):
+        if not isinstance(self.request.user, Company):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        serializer.save(company=self.request.user)
 
 
 class JobDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -138,6 +149,11 @@ class TalentDetail(generics.RetrieveDestroyAPIView):
             instance.increment_unique_visits(session_key)
         return super().retrieve(request, *args, **kwargs)
 
+    def destroy(self, request, *args, **kwargs):
+        if not isinstance(request.user, Talent):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        return super().destroy(request, *args, **kwargs)
+
 
 @api_view(["PATCH"])
 @authentication_classes([DiscordAuthentication])
@@ -153,6 +169,8 @@ def about_me(request, pk, format=None):
     Returns:
         Response: The HTTP response object.
     """
+    if not isinstance(request.user, Talent):
+        return Response(status=status.HTTP_403_FORBIDDEN)
     try:
         talent = Talent.objects.get(pk=pk)
         if talent != request.user:
@@ -181,6 +199,8 @@ def summary(request, pk, format=None):
     Returns:
         Response: The HTTP response containing the updated talent summary.
     """
+    if not isinstance(request.user, Talent):
+        return Response(status=status.HTTP_403_FORBIDDEN)
     try:
         talent = Talent.objects.get(pk=pk)
         if talent != request.user:
@@ -209,6 +229,8 @@ def username(request, pk, format=None):
     Returns:
         Response: The HTTP response object containing the updated username data or error messages.
     """
+    if not isinstance(request.user, Talent):
+        return Response(status=status.HTTP_403_FORBIDDEN)
     try:
         talent = Talent.objects.get(pk=pk)
         if talent != request.user:
@@ -276,6 +298,8 @@ class SkillView(generics.RetrieveUpdateAPIView):
         Raises:
             Response: If the request data is invalid or exceeds the maximum limit.
         """
+        if not isinstance(self.request.user, Talent):
+            return Response(status=status.HTTP_403_FORBIDDEN)
         queryset = self.get_queryset()
         if len(request.data) > 5:
             return Response(
@@ -315,6 +339,8 @@ class ExperienceList(generics.ListCreateAPIView):
         """
         Set the owner of the experience to the user making the request.
         """
+        if not isinstance(self.request.user, Talent):
+            return Response(status=status.HTTP_403_FORBIDDEN)
         serializer.save(talent=self.request.user)
 
 
@@ -344,9 +370,23 @@ class ReviewList(generics.ListCreateAPIView):
     # List and create review instances
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
+    authentication_classes = [djoser_settings.TOKEN_MODEL]
+
+    def get_authenticators(self):
+        if self.request is None or self.request.method == "GET":
+            return []
+        return super().get_authenticators()
+
+    def perform_create(self, serializer):
+        if not isinstance(self.request.user, Company):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        talent_username = serializer.validated_data.get("talent_username")
+        talent = Talent.objects.get(username=talent_username)
+        serializer.save(reviewer_organization=self.request.user, talent=talent)
 
 
 class ReviewDetail(generics.RetrieveAPIView):
     # Retrieve, update, and delete individual review instances
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
+    authentication_classes = []

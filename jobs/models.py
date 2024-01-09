@@ -6,7 +6,7 @@ from .managers import CompanyManager
 class Company(AbstractBaseUser, PermissionsMixin):
     objects = CompanyManager()
 
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=200, unique=True)
     email = models.EmailField(max_length=200, unique=True)
     password = models.CharField(max_length=200)
     logo = models.URLField(max_length=200)
