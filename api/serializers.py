@@ -6,6 +6,7 @@ from talents.models import Talent, Review, Experience, Skill
 
 
 class JobSerializer(serializers.ModelSerializer):
+    company_name = serializers.CharField(source="company.name")
     class Meta:
         model = Job
         fields = [

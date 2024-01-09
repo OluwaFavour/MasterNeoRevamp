@@ -12,7 +12,7 @@ from .serializers import (
     UsernameSerializer,
     SkillSerializer,
 )
-from .permissions import IsTalentOrReadOnly
+from .permissions import IsTalentOrReadOnly, IsCompanyOrReadOnly
 from django.conf import settings as djoser_settings
 from rest_framework import generics
 from rest_framework import status
@@ -79,7 +79,13 @@ class JobDetail(generics.RetrieveUpdateDestroyAPIView):
 
     queryset = Job.objects.all()
     serializer_class = JobSerializer
-    authentication_classes = []
+    permission_classes = [IsCompanyOrReadOnly]
+    authentication_classes = [djoser_settings.TOKEN_MODEL]
+    
+    def get_authenticators(self):
+        if self.request is None or self.request.method == "GET":
+            return []
+        return super().get_authenticators()
 
 
 # Views for Talent endpoints
@@ -380,9 +386,7 @@ class ReviewList(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         if not isinstance(self.request.user, Company):
             return Response(status=status.HTTP_403_FORBIDDEN)
-        talent_username = serializer.validated_data.get("talent_username")
-        talent = Talent.objects.get(username=talent_username)
-        serializer.save(reviewer_organization=self.request.user, talent=talent)
+        serializer.save(reviewer_organization=self.request.user)
 
 
 class ReviewDetail(generics.RetrieveAPIView):
