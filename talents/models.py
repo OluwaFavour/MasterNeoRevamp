@@ -29,6 +29,15 @@ class Talent(models.Model):
     is_active = models.BooleanField(default=True)
     skills = models.ManyToManyField("Skill", blank=True)
 
+    def get_average_rating(self) -> float:
+        # Get all the reviews for this talent
+        reviews = Review.objects.filter(talent=self)
+
+        # Calculate the average rating
+        average_rating = reviews.aggregate(models.Avg("rating"))["rating__avg"]
+
+        return average_rating
+
     def increment_profile_visits(self):
         self.profile_visits += 1
         self.save()
@@ -64,6 +73,7 @@ class Skill(models.Model):
 
     def __str__(self):
         return self.name
+
 
 class UniqueProfileVisit(models.Model):
     talent = models.ForeignKey("Talent", on_delete=models.CASCADE)

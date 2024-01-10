@@ -77,10 +77,11 @@ MIDDLEWARE = [
 ]
 
 # REST Framework
+TOKEN_MODEL = "rest_framework.authentication.TokenAuthentication"
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.TokenAuthentication",
+        TOKEN_MODEL,
     ],
 }
 

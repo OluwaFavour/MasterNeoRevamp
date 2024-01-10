@@ -1,4 +1,5 @@
 from oauth2.auth import DiscordAuthentication
+from .openapi_extensions import DiscordAuthenticationScheme
 from talents.models import Skill, Talent, Review, Experience
 from jobs.models import Job, Company
 from .serializers import (
@@ -81,7 +82,7 @@ class JobDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = JobSerializer
     permission_classes = [IsCompanyOrReadOnly]
     authentication_classes = [djoser_settings.TOKEN_MODEL]
-    
+
     def get_authenticators(self):
         if self.request is None or self.request.method == "GET":
             return []
@@ -390,7 +391,26 @@ class ReviewList(generics.ListCreateAPIView):
 
 
 class ReviewDetail(generics.RetrieveAPIView):
-    # Retrieve, update, and delete individual review instances
+    # Retrieve, individual review instances
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     authentication_classes = []
+
+
+@api_view(["GET"])
+def get_talent_average_rating(request, pk):
+    """
+    Get the average rating of a talent.
+
+    Args:
+        request (Request): The HTTP request object.
+        pk (int): The primary key of the talent.
+
+    Returns:
+        Response: The HTTP response object containing the average rating of the talent.
+    """
+    try:
+        talent = Talent.objects.get(pk=pk)
+    except Talent.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    return Response({"average_rating": talent.get_average_rating()})
