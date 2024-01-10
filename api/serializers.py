@@ -14,6 +14,7 @@ class CustomSerializer(serializers.Serializer):
 
 class JobSerializer(serializers.ModelSerializer):
     company_name = serializers.CharField(source="company.name")
+    job_types = serializers.StringRelatedField(many=True)
 
     class Meta:
         model = Job
@@ -26,6 +27,7 @@ class JobSerializer(serializers.ModelSerializer):
             "location",
             "time_added",
             "job_description",
+            "job_types",
         ]
 
 
