@@ -12,11 +12,13 @@ from .serializers import (
     ReviewSerializer,
     UsernameSerializer,
     SkillSerializer,
+    CustomSerializer,
 )
 from .permissions import IsTalentOrReadOnly, IsCompanyOrReadOnly
-from django.conf import settings as djoser_settings
+from rest_framework.authentication import TokenAuthentication
 from rest_framework import generics
 from rest_framework import status
+from rest_framework.views import APIView
 from rest_framework.decorators import api_view, authentication_classes
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.response import Response
@@ -24,29 +26,39 @@ from rest_framework.reverse import reverse
 
 
 # Define an API root view to display available endpoints
-@api_view(["GET"])
-@authentication_classes([])
-def api_root(request, format=None):
+class APIRoot(generics.GenericAPIView):
     """
     API root view.
 
     Returns a response with available API endpoints.
-
-    Parameters:
-    - request: The HTTP request object.
-    - format: The requested format for the response.
-
-    Returns:
-    A Response object containing the available API endpoints.
     """
-    return Response(
-        {
-            "talents": reverse("talent-list", request=request, format=format),
-            "jobs": reverse("job-list", request=request, format=format),
-            "reviews": reverse("review-list", request=request, format=format),
-            "experiences": reverse("experience-list", request=request, format=format),
-        }
-    )
+
+    authentication_classes = []
+    serializer_class = CustomSerializer
+
+    def get(self, request, format=None):
+        """
+        Handle GET requests.
+
+        Parameters:
+        - request: The HTTP request object.
+        - format: The requested format for the response.
+
+        Returns:
+        A Response object containing the available API endpoints.
+        """
+        serializer = CustomSerializer(
+            data={
+                "talents": reverse("talent-list", request=request, format=format),
+                "jobs": reverse("job-list", request=request, format=format),
+                "reviews": reverse("review-list", request=request, format=format),
+                "experiences": reverse(
+                    "experience-list", request=request, format=format
+                ),
+            }
+        )
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
 
 
 # Views for Job endpoints
@@ -57,7 +69,7 @@ class JobList(generics.ListCreateAPIView):
 
     queryset = Job.objects.all()
     serializer_class = JobSerializer
-    authentication_classes = [djoser_settings.TOKEN_MODEL]
+    authentication_classes = [TokenAuthentication]
 
     def get_authenticators(self):
         if self.request is None or self.request.method == "GET":
@@ -81,7 +93,7 @@ class JobDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Job.objects.all()
     serializer_class = JobSerializer
     permission_classes = [IsCompanyOrReadOnly]
-    authentication_classes = [djoser_settings.TOKEN_MODEL]
+    authentication_classes = [TokenAuthentication]
 
     def get_authenticators(self):
         if self.request is None or self.request.method == "GET":
@@ -377,7 +389,7 @@ class ReviewList(generics.ListCreateAPIView):
     # List and create review instances
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
-    authentication_classes = [djoser_settings.TOKEN_MODEL]
+    authentication_classes = [TokenAuthentication]
 
     def get_authenticators(self):
         if self.request is None or self.request.method == "GET":

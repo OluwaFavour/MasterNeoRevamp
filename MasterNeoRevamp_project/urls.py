@@ -23,11 +23,11 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
     SpectacularRedocView,
 )
-from .views import index
+from .views import Index
 
 
 urlpatterns = [
-    path("", index, name="index"),
+    path("", Index.as_view(), name="index"),
     path("admin/", admin.site.urls),
     path("oauth2/", include("oauth2.urls")),
     path("auth/", include("djoser.urls")),

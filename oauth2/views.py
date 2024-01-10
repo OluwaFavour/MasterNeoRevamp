@@ -10,6 +10,7 @@ from rest_framework import status
 from rest_framework import generics
 from rest_framework.views import APIView
 from .auth import DiscordAuthentication
+from api.openapi_extensions import DiscordAuthenticationScheme
 
 # CONSTANTS
 AUTHORIZATION_URL = os.getenv("AUTHORIZATION_URL")
@@ -32,6 +33,8 @@ class DiscordRedirectView(APIView):
     """
     View for handling Discord OAuth2 redirect.
     """
+
+    authentication_classes = []
 
     def get(self, request, format=None) -> Response:
         """
@@ -70,6 +73,8 @@ class RefreshTokenView(APIView):
     API view for refreshing access token using a refresh token.
     """
 
+    authentication_classes = []
+
     def post(self, request, format=None):
         """
         Handle POST requests for refreshing access token.
@@ -103,6 +108,8 @@ class RevokeTokenView(APIView):
     """
     API view for revoking an access token.
     """
+
+    authentication_classes = []
 
     def post(self, request, format=None):
         """

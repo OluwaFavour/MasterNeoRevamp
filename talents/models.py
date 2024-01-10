@@ -34,7 +34,7 @@ class Talent(models.Model):
         reviews = Review.objects.filter(talent=self)
 
         # Calculate the average rating
-        average_rating = reviews.aggregate(models.Avg("rating"))["rating__avg"]
+        average_rating: float = reviews.aggregate(models.Avg("rating"))["rating__avg"]
 
         return average_rating
 
@@ -92,7 +92,7 @@ class Review(models.Model):
     reviewer_name = models.CharField(max_length=200)
     reviewer_position = models.CharField(max_length=200, blank=True, null=True)
     reviewer_organization = models.OneToOneField(Company, on_delete=models.CASCADE)
-    review = models.TextField()
+    review = models.TextField(blank=True, null=True)
     rating = models.PositiveIntegerField(default=0)
 
     def __str__(self):

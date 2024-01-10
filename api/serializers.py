@@ -5,8 +5,16 @@ from jobs.models import Job
 from talents.models import Talent, Review, Experience, Skill
 
 
+class CustomSerializer(serializers.Serializer):
+    talents = serializers.CharField(max_length=200)
+    jobs = serializers.CharField(max_length=200)
+    reviews = serializers.CharField(max_length=200)
+    experiences = serializers.CharField(max_length=200)
+
+
 class JobSerializer(serializers.ModelSerializer):
     company_name = serializers.CharField(source="company.name")
+
     class Meta:
         model = Job
         fields = [
@@ -49,7 +57,7 @@ class TalentSerializer(serializers.ModelSerializer):
             "discord_profile",
             "twitter_profile",
             "phone_number",
-            "skills", # Problem Outputs a list of skills pk instead of the skill name
+            "skills",  # Problem Outputs a list of skills pk instead of the skill name
         ]
 
 
@@ -81,8 +89,9 @@ class ReviewSerializer(serializers.ModelSerializer):
     """
     Serializer class for the Review model.
     """
+
     talent_username = serializers.CharField(source="talent.username")
-    
+
     class Meta:
         model = Review
         fields = [
