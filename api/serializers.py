@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from timezone_field.rest_framework import TimeZoneSerializerField
 
-from jobs.models import Job
+from jobs.models import Job, JobType
 from talents.models import Talent, Review, Experience, Skill
 
 
@@ -13,21 +13,24 @@ class CustomSerializer(serializers.Serializer):
 
 
 class JobSerializer(serializers.ModelSerializer):
-    company_name = serializers.CharField(source="company.name")
-    job_types = serializers.StringRelatedField(many=True)
-
     class Meta:
         model = Job
         fields = [
             "id",
             "job_logo",
             "job_link",
-            "company_name",
             "job_title",
             "location",
             "time_added",
             "job_description",
-            "job_types",
+        ]
+
+
+class JobTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = JobType
+        fields = [
+            "name",
         ]
 
 

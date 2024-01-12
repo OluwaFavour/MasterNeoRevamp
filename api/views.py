@@ -1,7 +1,7 @@
 from oauth2.auth import DiscordAuthentication
 from .openapi_extensions import DiscordAuthenticationScheme
 from talents.models import Skill, Talent, Review, Experience
-from jobs.models import Job, Company
+from jobs.models import Job, Company, JobType
 from .serializers import (
     AboutMeSerializer,
     ExperienceOutputSerializer,
@@ -13,6 +13,7 @@ from .serializers import (
     UsernameSerializer,
     SkillSerializer,
     CustomSerializer,
+    JobTypeSerializer,
 )
 from .permissions import IsTalentOrReadOnly, IsCompanyOrReadOnly
 from rest_framework.authentication import TokenAuthentication
@@ -100,6 +101,65 @@ class JobDetail(generics.RetrieveUpdateDestroyAPIView):
             return []
         return super().get_authenticators()
 
+class JobTypeView(generics.RetrieveUpdateAPIView):
+    
+    authentication_classes = [TokenAuthentication]
+    serializer_class = JobTypeSerializer
+    
+    def get_authenticators(self):
+        if self.request is None or self.request.method == "GET":
+            return []
+        return super().get_authenticators()
+
+    def get_queryset(self):
+        """
+        Get the queryset of job types for the job.
+        Returns:
+            QuerySet: The queryset of job types.
+
+        Raises:
+            NotFound: If the job does not exist.
+        """
+        pk = self.kwargs.get("pk")
+        try:
+            job = Job.objects.get(pk=pk)
+            if job.company != self.request.user and self.request.method != "GET":
+                raise PermissionDenied()
+            return job.job_types
+        except Job.DoesNotExist:
+            raise NotFound(detail="Job not found.", code=404)
+
+    def get(self, request, *args, **kwargs):
+        """
+        Retrieve the job types of the job.
+
+        Returns:
+            Response: The serialized job types data.
+        """
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset.all(), many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request, *args, **kwargs):
+        """
+        Update the job types of the job.
+
+        Returns:
+            Response: The serialized updated job types data.
+
+        Raises:
+            Response: If the request data is invalid.
+        """
+        if not isinstance(self.request.user, Company):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        queryset = self.get_queryset()
+        data = [{"name": name} for name in request.data.getlist("name")]
+        queryset.clear()
+        for job_type_data in data:
+            job_type, _ = JobType.objects.get_or_create(name=job_type_data["name"])
+            queryset.add(job_type)
+        serializer = self.get_serializer(queryset.all(), many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 # Views for Talent endpoints
 class TalentList(generics.ListAPIView):
