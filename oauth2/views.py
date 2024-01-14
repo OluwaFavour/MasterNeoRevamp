@@ -13,10 +13,13 @@ from .auth import DiscordAuthentication
 from api.openapi_extensions import DiscordAuthenticationScheme
 
 # CONSTANTS
-if "RENDER" in os.environ:
-    AUTHORIZATION_URL = "https://discord.com/api/oauth2/authorize?client_id=1192178284868423810&response_type=code&redirect_uri=https%3A%2F%2Fmaster-neo-revamp.onrender.com%2Foauth2%2Fdiscord%2Flogin%2Fredirect&scope=identify"
-else:
-    AUTHORIZATION_URL = os.getenv("AUTHORIZATION_URL")
+AUTHORIZATION_URL = (
+    (
+        "https://discord.com/api/oauth2/authorize?client_id=1192178284868423810&response_type=code&redirect_uri=https%3A%2F%2Fmaster-neo-revamp.onrender.com%2Foauth2%2Fdiscord%2Flogin%2Fredirect&scope=identify"
+    )
+    if "RENDER" in os.environ
+    else os.getenv("AUTHORIZATION_URL")
+)
 
 
 def discord_login(request):
