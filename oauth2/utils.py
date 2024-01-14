@@ -205,6 +205,7 @@ def get_user(authorization: str) -> dict:
     else:
         user = response.json()
         if response.status_code != 200:
+            print(user)
             raise requests.exceptions.RequestException(
                 f"{user.get('message')}", response=response
             )
