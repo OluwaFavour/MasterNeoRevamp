@@ -52,6 +52,7 @@ class APIRoot(generics.GenericAPIView):
     """
 
     serializer_class = CustomSerializer
+    authentication_classes = []
 
     def get(self, request, format=None):
         """
