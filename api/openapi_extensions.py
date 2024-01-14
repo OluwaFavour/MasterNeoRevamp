@@ -2,6 +2,10 @@ from drf_spectacular.extensions import OpenApiAuthenticationExtension
 
 
 class DiscordAuthenticationScheme(OpenApiAuthenticationExtension):
+    """
+    Represents a Discord authentication scheme for OpenAPI.
+    """
+
     target_class = (
         "oauth2.auth.DiscordAuthentication"  # Path to your DiscordAuthentication class
     )

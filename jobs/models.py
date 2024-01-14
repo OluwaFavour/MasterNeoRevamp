@@ -4,6 +4,23 @@ from .managers import CompanyManager
 
 
 class Company(AbstractBaseUser, PermissionsMixin):
+    """
+    Represents a company in the system.
+
+    Attributes:
+        name (str): The name of the company.
+        email (str): The email address of the company.
+        password (str): The password of the company.
+        logo (str): The URL of the company's logo.
+        website (str, optional): The URL of the company's website.
+        description (str, optional): A description of the company.
+        is_active (bool): Indicates if the company is active.
+        is_staff (bool): Indicates if the company is a staff member.
+
+    Methods:
+        __str__(): Returns a string representation of the company.
+    """
+
     objects = CompanyManager()
 
     name = models.CharField(max_length=200)
@@ -24,6 +41,13 @@ class Company(AbstractBaseUser, PermissionsMixin):
 
 
 class JobType(models.Model):
+    """
+    Represents a type of job in the system.
+
+    Attributes:
+        name (str): The name of the job type.
+    """
+
     SKILL_CHOICES = [
         ("Community manager", "Community manager"),
         ("Collab manager", "Collab manager"),
@@ -44,6 +68,20 @@ class JobType(models.Model):
 
 
 class Job(models.Model):
+    """
+    Represents a job listing.
+
+    Attributes:
+        job_logo (str): The URL of the job logo.
+        job_link (str): The URL of the job listing.
+        company (Company): The company associated with the job.
+        job_title (str): The title of the job.
+        location (str): The location of the job.
+        time_added (datetime): The date and time when the job was added.
+        job_description (str): The description of the job.
+        job_types (QuerySet): The types of the job.
+    """
+
     job_logo = models.URLField(max_length=200)
     job_link = models.URLField(max_length=200)
     company = models.ForeignKey("Company", on_delete=models.CASCADE)

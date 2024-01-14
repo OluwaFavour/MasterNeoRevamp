@@ -7,6 +7,29 @@ from jobs.models import Company
 
 # Create your models here.
 class Talent(models.Model):
+    """
+    Represents a talent in the system.
+
+    Attributes:
+        id (BigIntegerField): The primary key of the talent.
+        avatar (URLField): The URL of the talent's avatar.
+        username (CharField): The username of the talent.
+        global_name (CharField): The global name of the talent.
+        timezone (TimeZoneField): The timezone of the talent.
+        language (CharField): The language of the talent.
+        about_me (TextField): A description about the talent.
+        summary (TextField): A summary of the talent.
+        profile_visits (PositiveIntegerField): The number of profile visits for the talent.
+        email (EmailField): The email of the talent.
+        discord_profile (CharField): The Discord profile of the talent.
+        twitter_profile (CharField): The Twitter profile of the talent.
+        phone_number (PhoneNumberField): The phone number of the talent.
+        date_joined (DateTimeField): The date and time when the talent joined.
+        last_login (DateTimeField): The date and time of the talent's last login.
+        is_active (BooleanField): Indicates if the talent is active.
+        skills (ManyToManyField): The skills associated with the talent.
+    """
+
     objects = TalentOauth2Manager()
 
     id = models.BigIntegerField(primary_key=True)
@@ -30,6 +53,12 @@ class Talent(models.Model):
     skills = models.ManyToManyField("Skill", blank=True)
 
     def get_average_rating(self) -> float:
+        """
+        Calculates and returns the average rating for the talent.
+
+        Returns:
+            float: The average rating.
+        """
         # Get all the reviews for this talent
         reviews = Review.objects.filter(talent=self)
 
@@ -39,22 +68,51 @@ class Talent(models.Model):
         return average_rating
 
     def increment_profile_visits(self):
+        """
+        Increments the profile visits count for the talent.
+        """
         self.profile_visits += 1
         self.save()
 
     def increment_unique_visits(self, session_key):
+        """
+        Increments the unique profile visits count for the talent.
+
+        Args:
+            session_key (str): The session key of the visitor.
+        """
         if not self.uniqueprofilevisit_set.filter(session_key=session_key).exists():
             self.uniqueprofilevisit_set.create(session_key=session_key)
             self.increment_profile_visits()
 
-    def is_authenticated(self, request):
+    @property
+    def is_authenticated(self):
+        """
+        Indicates if the talent is authenticated.
+
+        Returns:
+            bool: True if the talent is authenticated, False otherwise.
+        """
         return True
 
     def __str__(self):
-        return self.username
+        """
+        Returns a string representation of the talent.
+
+        Returns:
+            str: The string representation of the talent.
+        """
+        return f"{self.id} - {self.username if self.username else self.global_name}"
 
 
 class Skill(models.Model):
+    """
+    Represents a skill that a user can possess.
+
+    Attributes:
+        name (str): The name of the skill.
+    """
+
     SKILL_CHOICES = [
         ("Community manager", "Community manager"),
         ("Collab manager", "Collab manager"),
@@ -76,6 +134,10 @@ class Skill(models.Model):
 
 
 class UniqueProfileVisit(models.Model):
+    """
+    Represents a unique profile visit by a session key to a talent's profile.
+    """
+
     talent = models.ForeignKey("Talent", on_delete=models.CASCADE)
     session_key = models.CharField(max_length=40)
     visit_date = models.DateTimeField(auto_now_add=True)
@@ -88,6 +150,18 @@ class UniqueProfileVisit(models.Model):
 
 
 class Review(models.Model):
+    """
+    Represents a review for a talent.
+
+    Attributes:
+        talent (Talent): The talent being reviewed.
+        reviewer_name (str): The name of the reviewer.
+        reviewer_position (str, optional): The position of the reviewer.
+        reviewer_organization (Company): The organization of the reviewer.
+        review (str, optional): The review text.
+        rating (int): The rating given by the reviewer.
+    """
+
     talent = models.ForeignKey(Talent, on_delete=models.CASCADE)
     reviewer_name = models.CharField(max_length=200)
     reviewer_position = models.CharField(max_length=200, blank=True, null=True)
@@ -100,6 +174,23 @@ class Review(models.Model):
 
 
 class Experience(models.Model):
+    """
+    Represents a work experience of a talent.
+
+    Attributes:
+        talent (ForeignKey): The talent associated with the experience.
+        project_logo (ImageField): The logo of the project.
+        company_name (CharField): The name of the company.
+        role (CharField): The role in the company.
+        description (TextField): A description of the experience.
+        start_date (DateField): The start date of the experience.
+        end_date (DateField): The end date of the experience.
+        currently_working (BooleanField): Indicates if the talent is currently working in this experience.
+        verified (BooleanField): Indicates if the experience is verified.
+        twitter_link (URLField): The Twitter link associated with the experience.
+        discord_link (URLField): The Discord link associated with the experience.
+    """
+
     talent = models.ForeignKey(Talent, on_delete=models.CASCADE)
     project_logo = models.ImageField(upload_to="images/")
     company_name = models.CharField(max_length=200)

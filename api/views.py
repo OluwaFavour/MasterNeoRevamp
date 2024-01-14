@@ -1,3 +1,4 @@
+from django.db.models import Q, Avg
 from oauth2.auth import DiscordAuthentication
 from .openapi_extensions import DiscordAuthenticationScheme
 from talents.models import Skill, Talent, Review, Experience
@@ -5,7 +6,8 @@ from jobs.models import Job, Company, JobType
 from .serializers import (
     AboutMeSerializer,
     ExperienceOutputSerializer,
-    JobSerializer,
+    JobInSerializer,
+    JobOutSerializer,
     SummarySerializer,
     TalentSerializer,
     ExperienceSerializer,
@@ -17,16 +19,31 @@ from .serializers import (
 )
 from .permissions import IsTalentOrReadOnly, IsCompanyOrReadOnly
 from rest_framework.authentication import TokenAuthentication
-from rest_framework import generics
-from rest_framework import status
+from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, authentication_classes
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 
 
 # Define an API root view to display available endpoints
+class DefaultPagination(PageNumberPagination):
+    """
+    Default pagination class for API views.
+
+    Attributes:
+        page_size (int): The number of items to include on each page.
+        page_size_query_param (str): The query parameter to control the page size.
+        max_page_size (int): The maximum allowed page size.
+    """
+    page_size = 300
+    page_size_query_param = "page_size"
+    max_page_size = 1000
+
+
 class APIRoot(generics.GenericAPIView):
     """
     API root view.
@@ -34,7 +51,6 @@ class APIRoot(generics.GenericAPIView):
     Returns a response with available API endpoints.
     """
 
-    authentication_classes = []
     serializer_class = CustomSerializer
 
     def get(self, request, format=None):
@@ -66,18 +82,58 @@ class APIRoot(generics.GenericAPIView):
 class JobList(generics.ListCreateAPIView):
     """
     API endpoint for listing and creating job instances.
+
+    Inherits from generics.ListCreateAPIView and provides functionality for listing and creating job instances.
     """
 
     queryset = Job.objects.all()
-    serializer_class = JobSerializer
+    serializer_class = JobInSerializer
     authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    pagination_class = DefaultPagination
 
-    def get_authenticators(self):
-        if self.request is None or self.request.method == "GET":
-            return []
-        return super().get_authenticators()
+    def get_serializer_class(self):
+        if self.request.method == "GET":
+            return JobOutSerializer
+        return JobInSerializer
+
+    def get_queryset(self):
+        """
+        Returns the queryset of Job objects based on the provided query parameters.
+
+        If job_types are provided in the query parameters, the queryset is filtered
+        to include only jobs with matching job types.
+
+        Returns:
+            queryset (QuerySet): The filtered queryset of Job objects.
+        """
+        queryset = Job.objects.all()
+
+        # Filter by job types if provided in query parameters
+        job_types = self.request.query_params.getlist("job_types")
+        if job_types:
+            query_condition = Q()
+            for job_type in job_types:
+                query_condition |= Q(job_types__name__iexact=job_type)
+            queryset = queryset.filter(query_condition)
+
+        return queryset
 
     def perform_create(self, serializer):
+        """
+        Perform custom creation logic for the view.
+
+        This method is called when creating a new object using the view.
+        It checks if the request user is an instance of the Company model.
+        If not, it returns a 403 Forbidden response.
+        Otherwise, it saves the object with the company set to the request user.
+
+        Args:
+            serializer: The serializer instance used for object creation.
+
+        Returns:
+            None
+        """
         if not isinstance(self.request.user, Company):
             return Response(status=status.HTTP_403_FORBIDDEN)
         serializer.save(company=self.request.user)
@@ -92,28 +148,41 @@ class JobDetail(generics.RetrieveUpdateDestroyAPIView):
     """
 
     queryset = Job.objects.all()
-    serializer_class = JobSerializer
-    permission_classes = [IsCompanyOrReadOnly]
+    serializer_class = JobInSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly, IsCompanyOrReadOnly]
     authentication_classes = [TokenAuthentication]
 
-    def get_authenticators(self):
-        if self.request is None or self.request.method == "GET":
-            return []
-        return super().get_authenticators()
+    def get_serializer_class(self):
+        if self.request.method == "GET":
+            return JobOutSerializer
+        return JobInSerializer
+
 
 class JobTypeView(generics.RetrieveUpdateAPIView):
-    
+    """
+    API view for retrieving and updating job types for a job.
+
+    Inherits:
+        generics.RetrieveUpdateAPIView
+
+    Attributes:
+        authentication_classes (list): List of authentication classes for the view.
+        permission_classes (list): List of permission classes for the view.
+        serializer_class: Serializer class for the view.
+
+    Methods:
+        get_queryset: Get the queryset of job types for the job.
+        get: Retrieve the job types of the job.
+        put: Update the job types of the job.
+    """
     authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     serializer_class = JobTypeSerializer
-    
-    def get_authenticators(self):
-        if self.request is None or self.request.method == "GET":
-            return []
-        return super().get_authenticators()
 
     def get_queryset(self):
         """
         Get the queryset of job types for the job.
+
         Returns:
             QuerySet: The queryset of job types.
 
@@ -144,6 +213,10 @@ class JobTypeView(generics.RetrieveUpdateAPIView):
         """
         Update the job types of the job.
 
+        This method updates the job types associated with a job. It receives a list of job type names in the request data
+        and updates the job's job types accordingly. If the request data is invalid, it raises a Response with an appropriate
+        status code.
+
         Returns:
             Response: The serialized updated job types data.
 
@@ -160,6 +233,7 @@ class JobTypeView(generics.RetrieveUpdateAPIView):
             queryset.add(job_type)
         serializer = self.get_serializer(queryset.all(), many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 # Views for Talent endpoints
 class TalentList(generics.ListAPIView):
@@ -182,6 +256,42 @@ class TalentList(generics.ListAPIView):
 
     queryset = Talent.objects.all()
     serializer_class = TalentSerializer
+    pagination_class = DefaultPagination
+
+    def get_queryset(self):
+        """
+        Returns the queryset of Talent objects based on the provided query parameters.
+
+        The queryset is filtered by job types if 'skills' are provided in the query parameters.
+        It can also be sorted by average rating if 'sort_by' is provided in the query parameters.
+
+        Returns:
+            queryset (QuerySet): The filtered and sorted queryset of Talent objects.
+        """
+        queryset = Talent.objects.all()
+
+        # Filter by job types if provided in query parameters
+        skills = self.request.query_params.getlist("skills")
+        if skills:
+            query_condition = Q()
+            for skill in skills:
+                query_condition |= Q(skills__name__iexact=skill)
+            queryset = queryset.filter(query_condition)
+
+        # Sort by average rating if 'sort_by' is provided in query parameters
+        sort_by = self.request.query_params.get("sort_by")
+        if sort_by == "most_experienced":
+            # Use annotation to get the average rating and order by it
+            queryset = queryset.annotate(average_rating=Avg("review__rating")).order_by(
+                "-average_rating"
+            )
+        elif sort_by == "least_experienced":
+            # Use annotation to get the average rating and order by it
+            queryset = queryset.annotate(average_rating=Avg("review__rating")).order_by(
+                "average_rating"
+            )
+
+        return queryset
 
 
 class TalentDetail(generics.RetrieveDestroyAPIView):
@@ -202,7 +312,7 @@ class TalentDetail(generics.RetrieveDestroyAPIView):
     authentication_classes = [DiscordAuthentication]
 
     def get_authenticators(self):
-        if self.request is None or self.request.method == "GET":
+        if self.request is None or self.request.method in permissions.SAFE_METHODS:
             return []
         return super().get_authenticators()
 
@@ -333,7 +443,7 @@ class SkillView(generics.RetrieveUpdateAPIView):
     authentication_classes = [DiscordAuthentication]
 
     def get_authenticators(self):
-        if self.request is None or self.request.method == "GET":
+        if self.request is None or self.request.method in permissions.SAFE_METHODS:
             return []
         return super().get_authenticators()
 
@@ -410,7 +520,7 @@ class ExperienceList(generics.ListCreateAPIView):
         return ExperienceSerializer
 
     def get_authenticators(self):
-        if self.request is None or self.request.method == "GET":
+        if self.request is None or self.request.method in permissions.SAFE_METHODS:
             return []
         return super().get_authenticators()
 
@@ -439,31 +549,66 @@ class ExperienceDetail(generics.RetrieveUpdateDestroyAPIView):
         return ExperienceSerializer
 
     def get_authenticators(self):
-        if self.request is None or self.request.method == "GET":
+        if self.request is None or self.request.method in permissions.SAFE_METHODS:
             return []
         return super().get_authenticators()
 
 
 # Views for Review endpoints
 class ReviewList(generics.ListCreateAPIView):
-    # List and create review instances
+    """
+    API view for listing and creating review instances.
+
+    Attributes:
+        queryset (QuerySet): The queryset of Review objects.
+        serializer_class (Serializer): The serializer class for Review objects.
+        authentication_classes (list): The list of authentication classes used for authentication.
+
+    Methods:
+        get_authenticators: Returns the list of authenticators based on the request method.
+        perform_create: Performs the creation of a new review instance.
+    """
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     authentication_classes = [TokenAuthentication]
 
     def get_authenticators(self):
-        if self.request is None or self.request.method == "GET":
+        if self.request is None or self.request.method in permissions.SAFE_METHODS:
             return []
         return super().get_authenticators()
 
     def perform_create(self, serializer):
+        """
+        Perform custom creation logic for the view.
+
+        This method is called when a new object is being created.
+        It checks if the request user is an instance of the Company model.
+        If not, it returns a 403 Forbidden response.
+        Otherwise, it saves the serializer with the reviewer_organization set to the request user.
+
+        Args:
+            serializer (Serializer): The serializer instance.
+
+        Returns:
+            Response: The HTTP response.
+        """
         if not isinstance(self.request.user, Company):
             return Response(status=status.HTTP_403_FORBIDDEN)
         serializer.save(reviewer_organization=self.request.user)
 
 
 class ReviewDetail(generics.RetrieveAPIView):
-    # Retrieve, individual review instances
+    """
+    Retrieve a single review instance.
+
+    This view retrieves a single review instance based on the provided ID.
+    It does not require authentication.
+
+    Attributes:
+        queryset (QuerySet): The queryset of all review instances.
+        serializer_class (Serializer): The serializer class for review instances.
+        authentication_classes (list): The list of authentication classes used for this view.
+    """
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     authentication_classes = []

@@ -43,15 +43,17 @@ class DiscordAuthentication(BaseAuthentication):
             user = get_user(token)
         except RequestException as e:
             raise AuthenticationFailed(e)
-        else:
-            if user is None:
-                return None
-            try:
-                talent = Talent.objects.get(id=user.get("id"))
-            except Talent.DoesNotExist:
-                print("User not found... Creating new user")
-                talent = Talent.objects.create_talent(user)
-            return (talent, None)
+        
+        if user is None:
+            return None
+        try:
+            talent = Talent.objects.get(id=user.get("id"))
+        except Talent.DoesNotExist:
+            print("User not found... Creating new user")
+            talent = Talent.objects.create_talent(user)
+        except Exception as e:
+            raise AuthenticationFailed(f"Error getting user: {e}")
+        return (talent, None)
 
     def get_access_token(self, code: str) -> tuple:
         """
