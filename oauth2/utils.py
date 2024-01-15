@@ -5,13 +5,13 @@ from rest_framework.response import Response
 from rest_framework import status
 
 # CONSTANTS
-API_ENDPOINT = os.getenv("API_ENDPOINT")
-CLIENT_ID = os.getenv("CLIENT_ID")
-CLIENT_SECRET = os.getenv("CLIENT_SECRET")
-REDIRECT_URI = (
+DISCORD_API_ENDPOINT = os.getenv("DISCORD_API_ENDPOINT")
+DISCORD_CLIENT_ID = os.getenv("DISCORD_CLIENT_ID")
+DISCORD_CLIENT_SECRET = os.getenv("DISCORD_CLIENT_SECRET")
+DISCORD_REDIRECT_URI = (
     ("https://master-neo-revamp.onrender.com/oauth2/discord/login/redirect")
     if "RENDER" in os.environ
-    else os.getenv("REDIRECT_URI")
+    else os.getenv("DISCORD_REDIRECT_URI")
 )
 
 
@@ -68,7 +68,7 @@ def exchange_code(code: str) -> dict:
     data = {
         "grant_type": "authorization_code",
         "code": code,
-        "redirect_uri": REDIRECT_URI,
+        "redirect_uri": DISCORD_REDIRECT_URI,
         "scope": "identify",
     }
 
@@ -76,10 +76,10 @@ def exchange_code(code: str) -> dict:
 
     try:
         response = requests.post(
-            f"{API_ENDPOINT}/oauth2/token",
+            f"{DISCORD_API_ENDPOINT}/oauth2/token",
             data=data,
             headers=headers,
-            auth=(CLIENT_ID, CLIENT_SECRET),
+            auth=(DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET),
         )
     except requests.exceptions.RequestException as e:
         raise requests.exceptions.RequestException(
@@ -146,10 +146,10 @@ def refresh_credentials(
 
     try:
         response = requests.post(
-            f"{API_ENDPOINT}/oauth2/token",
+            f"{DISCORD_API_ENDPOINT}/oauth2/token",
             data=data,
             headers=headers,
-            auth=(CLIENT_ID, CLIENT_SECRET),
+            auth=(DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET),
         )
     except requests.exceptions.RequestException as e:
         raise requests.exceptions.RequestException(
@@ -175,10 +175,10 @@ def revoke_access_token(access_token: str) -> bool:
     data = {"token": access_token, "token_type_hint": "access_token"}
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
     response = requests.post(
-        f"{API_ENDPOINT}/oauth2/token/revoke",
+        f"{DISCORD_API_ENDPOINT}/oauth2/token/revoke",
         data=data,
         headers=headers,
-        auth=(CLIENT_ID, CLIENT_SECRET),
+        auth=(DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET),
     )
 
     return response.status_code == 200
@@ -199,7 +199,7 @@ def get_user(authorization: str) -> dict:
     """
     try:
         response = requests.get(
-            f"{API_ENDPOINT}/users/@me",
+            f"{DISCORD_API_ENDPOINT}/users/@me",
             headers={"Authorization": authorization},
         )
     except requests.exceptions.RequestException as e:

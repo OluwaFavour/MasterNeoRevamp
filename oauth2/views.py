@@ -13,7 +13,7 @@ from .auth import DiscordAuthentication
 from api.openapi_extensions import DiscordAuthenticationScheme
 
 # CONSTANTS
-AUTHORIZATION_URL = (
+DISCORD_AUTHORIZATION_URL = (
     (
         "https://discord.com/api/oauth2/authorize?client_id=1192178284868423810"
         "&response_type=code"
@@ -21,7 +21,7 @@ AUTHORIZATION_URL = (
         "&scope=identify"
     )
     if "RENDER" in os.environ
-    else os.getenv("AUTHORIZATION_URL")
+    else os.getenv("DISCORD_AUTHORIZATION_URL")
 )
 
 
@@ -35,7 +35,7 @@ def discord_login(request):
     Returns:
     - A redirect response to the Discord authorization URL.
     """
-    return redirect(AUTHORIZATION_URL)
+    return redirect(DISCORD_AUTHORIZATION_URL)
 
 
 class DiscordRedirectView(APIView):
