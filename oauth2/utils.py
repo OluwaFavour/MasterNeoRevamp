@@ -8,7 +8,11 @@ from rest_framework import status
 API_ENDPOINT = os.getenv("API_ENDPOINT")
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
-REDIRECT_URI = os.getenv("REDIRECT_URI")
+REDIRECT_URI = (
+    ("https://master-neo-revamp.onrender.com/oauth2/discord/login/redirect")
+    if "RENDER" in os.environ
+    else os.getenv("REDIRECT_URI")
+)
 
 
 def get_language_from_locale(locale: str) -> str:
