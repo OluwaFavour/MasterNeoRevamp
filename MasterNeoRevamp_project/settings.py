@@ -122,6 +122,7 @@ DJOSER = {
 CORS_ORIGIN_WHITELIST = [
     "http://localhost:3000",
     "http://localhost:8000",
+    "https://master-neo-revamp.onrender.com",
 ]
 
 ROOT_URLCONF = "MasterNeoRevamp_project.urls"
