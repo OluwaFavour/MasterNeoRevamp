@@ -118,12 +118,14 @@ DJOSER = {
     "SERIALIZERS": {},
 }
 
-# CORS
+# CORS Settings
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:8000",
     "https://master-neo-revamp.onrender.com",
 ]
+
+CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = "MasterNeoRevamp_project.urls"
 
