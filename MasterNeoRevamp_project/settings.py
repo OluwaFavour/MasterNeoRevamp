@@ -119,7 +119,7 @@ DJOSER = {
 }
 
 # CORS
-CORS_ORIGIN_WHITELIST = [
+CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:8000",
     "https://master-neo-revamp.onrender.com",
