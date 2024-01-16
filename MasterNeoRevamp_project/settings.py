@@ -211,3 +211,14 @@ if not DEBUG:
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+#SSL Settings
+if not DEBUG:
+    # Set SECURE_SSL_REDIRECT to True to redirect all non-HTTPS requests to HTTPS
+    SECURE_SSL_REDIRECT = True
+
+    # Set CSRF_COOKIE_SECURE to True to prevent CSRF attacks
+    CSRF_COOKIE_SECURE = True
+
+    # Set SESSION_COOKIE_SECURE to True to prevent session hijacking
+    SESSION_COOKIE_SECURE = True
