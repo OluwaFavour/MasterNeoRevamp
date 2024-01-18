@@ -1,17 +1,24 @@
 from django.db.models import Q, Avg
-from oauth2.auth import DiscordAuthentication
-from .openapi_extensions import DiscordAuthenticationScheme
+from oauth2.auth import DiscordOrTwitterAuthentication
+from .openapi_extensions import (
+    DiscordAuthenticationScheme,
+    DiscordOrTwitterAuthenticationScheme,
+    TwitterAuthenticationScheme,
+)
 from talents.models import Skill, Talent, Review, Experience
 from jobs.models import Job, Company, JobType
 from .serializers import (
     AboutMeSerializer,
+    AvatarSerializer,
     ExperienceOutputSerializer,
     JobInSerializer,
     JobOutSerializer,
+    LanguageSerializer,
     SummarySerializer,
     TalentSerializer,
     ExperienceSerializer,
     ReviewSerializer,
+    TimeZoneSerializer,
     UsernameSerializer,
     SkillSerializer,
     CustomSerializer,
@@ -20,13 +27,12 @@ from .serializers import (
 from .permissions import IsTalentOrReadOnly, IsCompanyOrReadOnly
 from rest_framework.authentication import TokenAuthentication
 from rest_framework import generics, permissions, status
-from rest_framework.views import APIView
 from rest_framework.decorators import api_view, authentication_classes
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 
 # Define an API root view to display available endpoints
@@ -39,6 +45,7 @@ class DefaultPagination(PageNumberPagination):
         page_size_query_param (str): The query parameter to control the page size.
         max_page_size (int): The maximum allowed page size.
     """
+
     page_size = 300
     page_size_query_param = "page_size"
     max_page_size = 1000
@@ -76,7 +83,7 @@ class APIRoot(generics.GenericAPIView):
             }
         )
         serializer.is_valid(raise_exception=True)
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 # Views for Job endpoints
@@ -176,6 +183,7 @@ class JobTypeView(generics.RetrieveUpdateAPIView):
         get: Retrieve the job types of the job.
         put: Update the job types of the job.
     """
+
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticatedOrReadOnly]
     serializer_class = JobTypeSerializer
@@ -310,7 +318,7 @@ class TalentDetail(generics.RetrieveDestroyAPIView):
 
     queryset = Talent.objects.all()
     serializer_class = TalentSerializer
-    authentication_classes = [DiscordAuthentication]
+    authentication_classes = [DiscordOrTwitterAuthentication]
 
     def get_authenticators(self):
         if self.request is None or self.request.method in permissions.SAFE_METHODS:
@@ -345,8 +353,98 @@ class TalentDetail(generics.RetrieveDestroyAPIView):
         return super().destroy(request, *args, **kwargs)
 
 
-@api_view(["PATCH"])
-@authentication_classes([DiscordAuthentication])
+@api_view(["POST"])
+@authentication_classes([DiscordOrTwitterAuthentication])
+def upload_avatar(request, pk, format=None):
+    """
+    Update the avatar of a talent.
+
+    Args:
+        request (Request): The HTTP request object.
+        pk (int): The primary key of the talent.
+        format (str, optional): The format of the response data. Defaults to None.
+
+    Returns:
+        Response: The HTTP response object.
+    """
+    if not isinstance(request.user, Talent):
+        return Response(status=status.HTTP_403_FORBIDDEN)
+    try:
+        talent = Talent.objects.get(pk=pk)
+        if talent != request.user:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+    except Talent.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = AvatarSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save(instance=request.user)
+        return Response({"avatar": request.user.avatar}, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["POST"])
+@authentication_classes([DiscordOrTwitterAuthentication])
+def language(request, pk, format=None):
+    """
+    Update the language of a talent.
+
+    Args:
+        request (Request): The HTTP request object.
+        pk (int): The primary key of the talent.
+        format (str, optional): The format of the response data. Defaults to None.
+
+    Returns:
+        Response: The HTTP response object.
+    """
+    if not isinstance(request.user, Talent):
+        return Response(status=status.HTTP_403_FORBIDDEN)
+    try:
+        talent = Talent.objects.get(pk=pk)
+        if talent != request.user:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+    except Talent.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = LanguageSerializer(talent, data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["POST"])
+@authentication_classes([DiscordOrTwitterAuthentication])
+def timezone(request, pk, format=None):
+    """
+    Update the timezone of a talent.
+
+    Args:
+        request (Request): The HTTP request object.
+        pk (int): The primary key of the talent.
+        format (str, optional): The format of the response data. Defaults to None.
+
+    Returns:
+        Response: The HTTP response object.
+    """
+    if not isinstance(request.user, Talent):
+        return Response(status=status.HTTP_403_FORBIDDEN)
+    try:
+        talent = Talent.objects.get(pk=pk)
+        if talent != request.user:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+    except Talent.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = TimeZoneSerializer(talent, data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["POST"])
+@authentication_classes([DiscordOrTwitterAuthentication])
 def about_me(request, pk, format=None):
     """
     Update the 'about me' information of a talent.
@@ -371,12 +469,12 @@ def about_me(request, pk, format=None):
     serializer = AboutMeSerializer(talent, data=request.data)
     if serializer.is_valid():
         serializer.save()
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(["PATCH"])
-@authentication_classes([DiscordAuthentication])
+@api_view(["POST"])
+@authentication_classes([DiscordOrTwitterAuthentication])
 def summary(request, pk, format=None):
     """
     Update the summary of a talent.
@@ -401,12 +499,12 @@ def summary(request, pk, format=None):
     serializer = SummarySerializer(talent, data=request.data)
     if serializer.is_valid():
         serializer.save()
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(["PATCH"])
-@authentication_classes([DiscordAuthentication])
+@api_view(["POST"])
+@authentication_classes([DiscordOrTwitterAuthentication])
 def username(request, pk, format=None):
     """
     Update the username of a talent.
@@ -431,7 +529,7 @@ def username(request, pk, format=None):
     serializer = UsernameSerializer(talent, data=request.data)
     if serializer.is_valid():
         serializer.save()
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -441,7 +539,7 @@ class SkillView(generics.RetrieveUpdateAPIView):
     """
 
     serializer_class = SkillSerializer
-    authentication_classes = [DiscordAuthentication]
+    authentication_classes = [DiscordOrTwitterAuthentication]
 
     def get_authenticators(self):
         if self.request is None or self.request.method in permissions.SAFE_METHODS:
@@ -513,7 +611,7 @@ class ExperienceList(generics.ListCreateAPIView):
 
     queryset = Experience.objects.all()
     serializer_class = ExperienceSerializer
-    authentication_classes = [DiscordAuthentication]
+    authentication_classes = [DiscordOrTwitterAuthentication]
 
     def get_serializer_class(self):
         if self.request.method == "GET":
@@ -542,7 +640,7 @@ class ExperienceDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Experience.objects.all()
     serializer_class = ExperienceSerializer
     permission_classes = [IsTalentOrReadOnly]
-    authentication_classes = [DiscordAuthentication]
+    authentication_classes = [DiscordOrTwitterAuthentication]
 
     def get_serializer_class(self):
         if self.request.method == "GET":
@@ -569,6 +667,7 @@ class ReviewList(generics.ListCreateAPIView):
         get_authenticators: Returns the list of authenticators based on the request method.
         perform_create: Performs the creation of a new review instance.
     """
+
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     authentication_classes = [TokenAuthentication]
@@ -610,6 +709,7 @@ class ReviewDetail(generics.RetrieveAPIView):
         serializer_class (Serializer): The serializer class for review instances.
         authentication_classes (list): The list of authentication classes used for this view.
     """
+
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     authentication_classes = []

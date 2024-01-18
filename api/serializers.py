@@ -1,17 +1,20 @@
+import requests
 from rest_framework import serializers
 from timezone_field.rest_framework import TimeZoneSerializerField
 
 from jobs.models import Job, JobType
+from oauth2.utils import upload_image
 from talents.models import Talent, Review, Experience, Skill
 
 
 class CustomSerializer(serializers.Serializer):
     """
     Serializer for custom data.
-    
+
     This serializer is used to serialize and deserialize custom data
     for talents, jobs, reviews, and experiences.
     """
+
     talents = serializers.CharField(max_length=200)
     jobs = serializers.CharField(max_length=200)
     reviews = serializers.CharField(max_length=200)
@@ -24,6 +27,7 @@ class JobOutSerializer(serializers.ModelSerializer):
     """
 
     job_types = serializers.StringRelatedField(many=True)
+
     class Meta:
         model = Job
         fields = [
@@ -36,6 +40,7 @@ class JobOutSerializer(serializers.ModelSerializer):
             "job_description",
             "job_types",
         ]
+
 
 class JobInSerializer(serializers.ModelSerializer):
     """
@@ -51,6 +56,7 @@ class JobInSerializer(serializers.ModelSerializer):
     - location: The location of the job.
     - job_description: The description of the job.
     """
+
     class Meta:
         model = Job
         fields = [
@@ -62,10 +68,12 @@ class JobInSerializer(serializers.ModelSerializer):
             "job_description",
         ]
 
+
 class JobTypeSerializer(serializers.ModelSerializer):
     """
     Serializer for the JobType model.
     """
+
     class Meta:
         model = JobType
         fields = [
@@ -77,6 +85,7 @@ class SkillSerializer(serializers.ModelSerializer):
     """
     Serializer for the Skill model.
     """
+
     class Meta:
         model = Skill
         fields = [
@@ -108,9 +117,12 @@ class TalentSerializer(serializers.ModelSerializer):
         model = Talent
         fields = [
             "id",
+            "discord_id",
+            "twitter_id",
             "username",
             "avatar",
-            "global_name",
+            "discord_global_name",
+            "twitter_global_name",
             "timezone",
             "language",
             "about_me",
@@ -124,10 +136,71 @@ class TalentSerializer(serializers.ModelSerializer):
         ]
 
 
+class LanguageSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the 'language' field of the Talent model.
+    """
+
+    class Meta:
+        model = Talent
+        fields = [
+            "language",
+        ]
+
+
+class TimeZoneSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the 'timezone' field of the Talent model.
+    """
+
+    timezone = TimeZoneSerializerField(use_pytz=True)
+
+    class Meta:
+        model = Talent
+        fields = [
+            "timezone",
+        ]
+
+
+class AvatarSerializer(serializers.Serializer):
+    """
+    Serializer for the 'avatar' field of the Talent model.
+    """
+
+    avatar = serializers.ImageField()
+
+    def save(self, instance):
+        """
+        Save method for the serializer.
+
+        Args:
+            instance: The instance of the model to be saved.
+
+        Returns:
+            None
+
+        Raises:
+            serializers.ValidationError: If the image upload fails.
+        """
+        image = self.validated_data["avatar"]
+
+        try:
+            # Upload the image to the image server (e.g., Cloudinary)
+            avatar_url = upload_image(image)
+        except Exception as e:
+            # Handle the case when the upload fails
+            raise serializers.ValidationError("Image upload failed")
+
+        # Save the avatar URL to the Talent model
+        instance.avatar = avatar_url
+        instance.save()
+
+
 class UsernameSerializer(serializers.ModelSerializer):
     """
     Serializer for the 'username' field of the Talent model.
     """
+
     class Meta:
         model = Talent
         fields = [
@@ -139,6 +212,7 @@ class AboutMeSerializer(serializers.ModelSerializer):
     """
     Serializer for the 'about_me' field of the Talent model.
     """
+
     class Meta:
         model = Talent
         fields = [
@@ -150,6 +224,7 @@ class SummarySerializer(serializers.ModelSerializer):
     """
     Serializer for the 'summary' field of the Talent model.
     """
+
     class Meta:
         model = Talent
         fields = [
@@ -204,6 +279,7 @@ class ExperienceOutputSerializer(serializers.ModelSerializer):
     """
     Serializer class for Experience model to output data.
     """
+
     class Meta:
         model = Experience
         fields = [

@@ -9,37 +9,27 @@ from jobs.models import Company
 class Talent(models.Model):
     """
     Represents a talent in the system.
-
-    Attributes:
-        id (BigIntegerField): The primary key of the talent.
-        avatar (URLField): The URL of the talent's avatar.
-        username (CharField): The username of the talent.
-        global_name (CharField): The global name of the talent.
-        timezone (TimeZoneField): The timezone of the talent.
-        language (CharField): The language of the talent.
-        about_me (TextField): A description about the talent.
-        summary (TextField): A summary of the talent.
-        profile_visits (PositiveIntegerField): The number of profile visits for the talent.
-        email (EmailField): The email of the talent.
-        discord_profile (CharField): The Discord profile of the talent.
-        twitter_profile (CharField): The Twitter profile of the talent.
-        phone_number (PhoneNumberField): The phone number of the talent.
-        date_joined (DateTimeField): The date and time when the talent joined.
-        last_login (DateTimeField): The date and time of the talent's last login.
-        is_active (BooleanField): Indicates if the talent is active.
-        skills (ManyToManyField): The skills associated with the talent.
     """
 
     objects = TalentOauth2Manager()
 
-    id = models.BigIntegerField(primary_key=True)
+    id = models.BigAutoField(primary_key=True)
     avatar = models.URLField(max_length=200)
-    username = models.CharField(max_length=200, unique=True)
-    global_name = models.CharField(max_length=200)
+    username = models.CharField(max_length=200, null=True, blank=True)
+    discord_id = models.BigIntegerField(null=True, blank=True)
+    twitter_id = models.BigIntegerField(null=True, blank=True)
+    discord_global_name = models.CharField(max_length=200, null=True, blank=True)
+    twitter_global_name = models.CharField(max_length=200, null=True, blank=True)
     timezone = TimeZoneField(
         default="UTC", choices_display="WITH_GMT_OFFSET", use_pytz=True
     )
-    language = models.CharField(max_length=200)
+    signed_in_with = models.CharField(
+        max_length=10,
+        null=True,
+        blank=True,
+        choices=[("Discord", "Discord"), ("Twitter", "Twitter")],
+    )
+    language = models.CharField(max_length=200, default="English")
     about_me = models.TextField()
     summary = models.TextField()
     profile_visits = models.PositiveIntegerField(default=0, editable=False)
