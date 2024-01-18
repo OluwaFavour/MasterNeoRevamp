@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import (
-    discord_login,
-    DiscordRedirectView,
+    discord_login_redirect,
+    DiscordLoginView,
     RefreshDiscordTokenView,
     RevokeDiscordTokenView,
     twitter_login,
@@ -12,11 +12,11 @@ from .views import (
 from rest_framework.urlpatterns import format_suffix_patterns
 
 urlpatterns = [
-    path("discord/login/", discord_login, name="discord-login"),
+    path("discord/login/redirect/", discord_login_redirect, name="discord-redirect"),
     path(
-        "discord/login/redirect",
-        DiscordRedirectView.as_view(),
-        name="discord-login-redirect",
+        "discord/login/",
+        DiscordLoginView.as_view(),
+        name="discord-login",
     ),
     path("discord/refresh/", RefreshDiscordTokenView.as_view(), name="discord-refresh"),
     path("discord/revoke/", RevokeDiscordTokenView.as_view(), name="discord-revoke"),

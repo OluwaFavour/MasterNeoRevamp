@@ -157,7 +157,7 @@ class RevokeTwitterTokenView(APIView):
         return Response({"is_revoked": is_revoked})
 
 
-def discord_login(request):
+def discord_login_redirect(request):
     """
     Redirects the user to the Discord authorization URL.
 
@@ -170,7 +170,7 @@ def discord_login(request):
     return redirect(DISCORD_AUTHORIZATION_URL)
 
 
-class DiscordRedirectView(APIView):
+class DiscordLoginView(APIView):
     """
     View for handling Discord OAuth2 redirect.
     """
@@ -197,10 +197,12 @@ class DiscordRedirectView(APIView):
         access_token, refresh_token, expires_in = auth.get_access_token(code)
         if access_token is None:
             return Response({"error": "Failed to get access token"}, status=400)
-        auth.authenticate(request, token=access_token)
+        talent = auth.authenticate(request, token=access_token)
 
         return Response(
             {
+                "id": talent.id,
+                "username": talent.username,
                 "access_token": access_token,
                 "refresh_token": refresh_token,
                 "expires_in": expires_in,
