@@ -156,7 +156,7 @@ class DiscordAuthentication(BaseAuthentication):
         if user is None:
             return None
         try:
-            talent = Talent.objects.get(disord_id=user.get("id"))
+            talent = Talent.objects.get(discord_id=user.get("id"))
             talent.signed_in_with = "Discord"
             talent.save()
         except Talent.DoesNotExist:
