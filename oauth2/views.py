@@ -194,18 +194,16 @@ class DiscordLoginView(APIView):
             return Response({"error": "Code not provided"}, status=400)
 
         auth = DiscordAuthentication()
-        access_token, refresh_token, expires_in = auth.get_access_token(code)
-        if access_token is None:
-            return Response({"error": "Failed to get access token"}, status=400)
-        talent = auth.authenticate(request, token=access_token)
+        # access_token, refresh_token, expires_in = auth.get_access_token(code)
+        # if access_token is None:
+        #     return Response({"error": "Failed to get access token"}, status=400)
+        talent = auth.authenticate(request)
 
         return Response(
             {
                 "id": talent.id,
                 "username": talent.username,
-                "access_token": access_token,
-                "refresh_token": refresh_token,
-                "expires_in": expires_in,
+                "avatar": talent.avatar,
             }
         )
 
