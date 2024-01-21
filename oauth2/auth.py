@@ -60,7 +60,7 @@ class TwitterAuthentication(BaseAuthentication):
             talent.save()
         except Exception as e:
             raise AuthenticationFailed(f"Error getting user: {e}")
-        return (talent, None)
+        return talent
 
     def get_access_token(self, code: str, code_verifier: str) -> tuple:
         """
@@ -166,7 +166,7 @@ class DiscordAuthentication(BaseAuthentication):
             talent.save()
         except Exception as e:
             raise AuthenticationFailed(f"Error getting user: {e}")
-        return (talent, None)
+        return talent
 
     def get_access_token(self, code: str) -> tuple:
         """

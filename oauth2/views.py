@@ -157,17 +157,20 @@ class RevokeTwitterTokenView(APIView):
         return Response({"is_revoked": is_revoked})
 
 
-def discord_login_redirect(request):
-    """
-    Redirects the user to the Discord authorization URL.
+class DiscordCallbackView(APIView):
+    authentication_classes = []
 
-    Parameters:
-    - request: The HTTP request object.
+    def get(self, request, format=None):
+        """
+        Redirects the user to the Discord authorization URL.
 
-    Returns:
-    - A redirect response to the Discord authorization URL.
-    """
-    return redirect(DISCORD_AUTHORIZATION_URL)
+        Parameters:
+        - request: The HTTP request object.
+
+        Returns:
+        - A redirect response to the Discord authorization URL.
+        """
+        return Response({"code": request.GET.get("code")})
 
 
 class DiscordLoginView(APIView):
@@ -194,16 +197,18 @@ class DiscordLoginView(APIView):
             return Response({"error": "Code not provided"}, status=400)
 
         auth = DiscordAuthentication()
-        # access_token, refresh_token, expires_in = auth.get_access_token(code)
-        # if access_token is None:
-        #     return Response({"error": "Failed to get access token"}, status=400)
-        talent = auth.authenticate(request)
+        access_token, refresh_token, expires_in = auth.get_access_token(code)
+        if access_token is None:
+            return Response({"error": "Failed to get access token"}, status=400)
+        talent = auth.authenticate(request, token=access_token)
 
         return Response(
             {
                 "id": talent.id,
                 "username": talent.username,
-                "avatar": talent.avatar,
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+                "expires_in": expires_in,
             }
         )
 
