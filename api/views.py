@@ -353,184 +353,220 @@ class TalentDetail(generics.RetrieveDestroyAPIView):
         return super().destroy(request, *args, **kwargs)
 
 
-@api_view(["POST"])
-@authentication_classes([DiscordOrTwitterAuthentication])
-def upload_avatar(request, pk, format=None):
+class UploadAvatar(generics.GenericAPIView):
     """
-    Update the avatar of a talent.
-
-    Args:
-        request (Request): The HTTP request object.
-        pk (int): The primary key of the talent.
-        format (str, optional): The format of the response data. Defaults to None.
-
-    Returns:
-        Response: The HTTP response object.
+    View to update the avatar of a talent.
     """
-    if not isinstance(request.user, Talent):
-        return Response(status=status.HTTP_403_FORBIDDEN)
-    try:
-        talent = Talent.objects.get(pk=pk)
-        if talent != request.user:
+
+    authentication_classes = [DiscordOrTwitterAuthentication]
+    serializer_class = AvatarSerializer
+
+    def post(self, request, pk, format=None):
+        """
+        Update the avatar of a talent.
+
+        Args:
+            request (Request): The HTTP request object.
+            pk (int): The primary key of the talent.
+            format (str, optional): The format of the response data. Defaults to None.
+
+        Returns:
+            Response: The HTTP response object.
+        """
+        if not isinstance(request.user, Talent):
             return Response(status=status.HTTP_403_FORBIDDEN)
-    except Talent.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        try:
+            talent = Talent.objects.get(pk=pk)
+            if talent != request.user:
+                return Response(status=status.HTTP_403_FORBIDDEN)
+        except Talent.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
-    serializer = AvatarSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save(instance=request.user)
-        return Response({"avatar": request.user.avatar}, status=status.HTTP_200_OK)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(instance=request.user)
+            return Response({"avatar": request.user.avatar}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(["POST"])
-@authentication_classes([DiscordOrTwitterAuthentication])
-def language(request, pk, format=None):
+class Language(generics.GenericAPIView):
     """
-    Update the language of a talent.
-
-    Args:
-        request (Request): The HTTP request object.
-        pk (int): The primary key of the talent.
-        format (str, optional): The format of the response data. Defaults to None.
-
-    Returns:
-        Response: The HTTP response object.
+    View to update the language of a talent.
     """
-    if not isinstance(request.user, Talent):
-        return Response(status=status.HTTP_403_FORBIDDEN)
-    try:
-        talent = Talent.objects.get(pk=pk)
-        if talent != request.user:
+
+    authentication_classes = [DiscordOrTwitterAuthentication]
+    serializer_class = LanguageSerializer
+
+    def post(self, request, pk, format=None):
+        """
+        Update the language of a talent.
+
+        Args:
+            request (Request): The HTTP request object.
+            pk (int): The primary key of the talent.
+            format (str, optional): The format of the response data. Defaults to None.
+
+        Returns:
+            Response: The HTTP response object.
+        """
+        if not isinstance(request.user, Talent):
             return Response(status=status.HTTP_403_FORBIDDEN)
-    except Talent.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        try:
+            talent = Talent.objects.get(pk=pk)
+            if talent != request.user:
+                return Response(status=status.HTTP_403_FORBIDDEN)
+        except Talent.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
-    serializer = LanguageSerializer(talent, data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer = self.get_serializer(instance=talent, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(["POST"])
-@authentication_classes([DiscordOrTwitterAuthentication])
-def timezone(request, pk, format=None):
+class Timezone(generics.GenericAPIView):
     """
-    Update the timezone of a talent.
-
-    Args:
-        request (Request): The HTTP request object.
-        pk (int): The primary key of the talent.
-        format (str, optional): The format of the response data. Defaults to None.
-
-    Returns:
-        Response: The HTTP response object.
+    View to update the timezone of a talent.
     """
-    if not isinstance(request.user, Talent):
-        return Response(status=status.HTTP_403_FORBIDDEN)
-    try:
-        talent = Talent.objects.get(pk=pk)
-        if talent != request.user:
+
+    authentication_classes = [DiscordOrTwitterAuthentication]
+    serializer_class = TimeZoneSerializer
+
+    def post(self, request, pk, format=None):
+        """
+        Update the timezone of a talent.
+
+        Args:
+            request (Request): The HTTP request object.
+            pk (int): The primary key of the talent.
+            format (str, optional): The format of the response data. Defaults to None.
+
+        Returns:
+            Response: The HTTP response object.
+        """
+        if not isinstance(request.user, Talent):
             return Response(status=status.HTTP_403_FORBIDDEN)
-    except Talent.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        try:
+            talent = Talent.objects.get(pk=pk)
+            if talent != request.user:
+                return Response(status=status.HTTP_403_FORBIDDEN)
+        except Talent.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
-    serializer = TimeZoneSerializer(talent, data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer = self.get_serializer(instance=talent, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(["POST"])
-@authentication_classes([DiscordOrTwitterAuthentication])
-def about_me(request, pk, format=None):
+class AboutMe(generics.GenericAPIView):
     """
-    Update the 'about me' information of a talent.
-
-    Args:
-        request (Request): The HTTP request object.
-        pk (int): The primary key of the talent.
-        format (str, optional): The format of the response data. Defaults to None.
-
-    Returns:
-        Response: The HTTP response object.
+    View to update the 'about me' information of a talent.
     """
-    if not isinstance(request.user, Talent):
-        return Response(status=status.HTTP_403_FORBIDDEN)
-    try:
-        talent = Talent.objects.get(pk=pk)
-        if talent != request.user:
+
+    authentication_classes = [DiscordOrTwitterAuthentication]
+    serializer_class = AboutMeSerializer
+
+    def post(self, request, pk, format=None):
+        """
+        Update the 'about me' information of a talent.
+
+        Args:
+            request (Request): The HTTP request object.
+            pk (int): The primary key of the talent.
+            format (str, optional): The format of the response data. Defaults to None.
+
+        Returns:
+            Response: The HTTP response object.
+        """
+        if not isinstance(request.user, Talent):
             return Response(status=status.HTTP_403_FORBIDDEN)
-    except Talent.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        try:
+            talent = Talent.objects.get(pk=pk)
+            if talent != request.user:
+                return Response(status=status.HTTP_403_FORBIDDEN)
+        except Talent.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
-    serializer = AboutMeSerializer(talent, data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer = self.get_serializer(instance=talent, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(["POST"])
-@authentication_classes([DiscordOrTwitterAuthentication])
-def summary(request, pk, format=None):
+class Summary(generics.GenericAPIView):
     """
-    Update the summary of a talent.
-
-    Args:
-        request (Request): The HTTP request object.
-        pk (int): The primary key of the talent to be updated.
-        format (str, optional): The format of the response. Defaults to None.
-
-    Returns:
-        Response: The HTTP response containing the updated talent summary.
+    View to update the summary of a talent.
     """
-    if not isinstance(request.user, Talent):
-        return Response(status=status.HTTP_403_FORBIDDEN)
-    try:
-        talent = Talent.objects.get(pk=pk)
-        if talent != request.user:
+
+    authentication_classes = [DiscordOrTwitterAuthentication]
+    serializer_class = SummarySerializer
+
+    def post(self, request, pk, format=None):
+        """
+        Update the summary of a talent.
+
+        Args:
+            request (Request): The HTTP request object.
+            pk (int): The primary key of the talent to be updated.
+            format (str, optional): The format of the response. Defaults to None.
+
+        Returns:
+            Response: The HTTP response containing the updated talent summary.
+        """
+        if not isinstance(request.user, Talent):
             return Response(status=status.HTTP_403_FORBIDDEN)
-    except Talent.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        try:
+            talent = Talent.objects.get(pk=pk)
+            if talent != request.user:
+                return Response(status=status.HTTP_403_FORBIDDEN)
+        except Talent.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
-    serializer = SummarySerializer(talent, data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer = self.get_serializer(instance=talent, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(["POST"])
-@authentication_classes([DiscordOrTwitterAuthentication])
-def username(request, pk, format=None):
+class Username(generics.GenericAPIView):
     """
-    Update the username of a talent.
-
-    Args:
-        request (Request): The HTTP request object.
-        pk (int): The primary key of the talent.
-        format (str, optional): The format of the response data. Defaults to None.
-
-    Returns:
-        Response: The HTTP response object containing the updated username data or error messages.
+    View to update the username of a talent.
     """
-    if not isinstance(request.user, Talent):
-        return Response(status=status.HTTP_403_FORBIDDEN)
-    try:
-        talent = Talent.objects.get(pk=pk)
-        if talent != request.user:
+
+    authentication_classes = [DiscordOrTwitterAuthentication]
+    serializer_class = UsernameSerializer
+
+    def post(self, request, pk, format=None):
+        """
+        Update the username of a talent.
+
+        Args:
+            request (Request): The HTTP request object.
+            pk (int): The primary key of the talent.
+            format (str, optional): The format of the response data. Defaults to None.
+
+        Returns:
+            Response: The HTTP response object containing the updated username data or error messages.
+        """
+        if not isinstance(request.user, Talent):
             return Response(status=status.HTTP_403_FORBIDDEN)
-    except Talent.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        try:
+            talent = Talent.objects.get(pk=pk)
+            if talent != request.user:
+                return Response(status=status.HTTP_403_FORBIDDEN)
+        except Talent.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
-    serializer = UsernameSerializer(talent, data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer = self.get_serializer(instance=talent, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class SkillView(generics.RetrieveUpdateAPIView):
