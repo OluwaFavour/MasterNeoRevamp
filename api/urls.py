@@ -29,7 +29,11 @@ urlpatterns = [
     path("talent/<int:pk>/about-me/", AboutMe.as_view(), name="about-me"),
     path("talent/<int:pk>/summary/", Summary.as_view(), name="summary"),
     path("talent/<int:pk>/username/", Username.as_view(), name="username"),
-    path("talent/<int:pk>/average-rating/", get_talent_average_rating, name="average-rating"),
+    path(
+        "talent/<int:pk>/average-rating/",
+        get_talent_average_rating,
+        name="average-rating",
+    ),
     path("talent/<int:pk>/avatar/", UploadAvatar.as_view(), name="avatar"),
     path("talent/<int:pk>/language/", Language.as_view(), name="language"),
     path("talent/<int:pk>/timezone/", Timezone.as_view(), name="timezone"),

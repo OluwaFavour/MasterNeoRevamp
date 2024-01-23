@@ -260,7 +260,7 @@ class DiscordOrTwitterAuthentication(BaseAuthentication):
         except AuthenticationFailed:
             user = None
         if user is not None:
-            return user
+            return user, None
 
         # Try TwitterAuthentication
         twitter_auth = TwitterAuthentication()
@@ -269,7 +269,7 @@ class DiscordOrTwitterAuthentication(BaseAuthentication):
         except AuthenticationFailed:
             user = None
         if user is not None:
-            return user
+            return user, None
 
         # If neither authentication method succeeds, raise AuthenticationFailed
         raise AuthenticationFailed("No valid authentication credentials provided.")

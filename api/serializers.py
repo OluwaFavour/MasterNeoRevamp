@@ -141,6 +141,8 @@ class LanguageSerializer(serializers.ModelSerializer):
     Serializer for the 'language' field of the Talent model.
     """
 
+    language = serializers.CharField(max_length=200)
+
     class Meta:
         model = Talent
         fields = [
@@ -201,6 +203,8 @@ class UsernameSerializer(serializers.ModelSerializer):
     Serializer for the 'username' field of the Talent model.
     """
 
+    username = serializers.CharField(max_length=200)
+
     class Meta:
         model = Talent
         fields = [
@@ -213,6 +217,8 @@ class AboutMeSerializer(serializers.ModelSerializer):
     Serializer for the 'about_me' field of the Talent model.
     """
 
+    about_me = serializers.CharField(max_length=200)
+
     class Meta:
         model = Talent
         fields = [
@@ -224,6 +230,8 @@ class SummarySerializer(serializers.ModelSerializer):
     """
     Serializer for the 'summary' field of the Talent model.
     """
+
+    summary = serializers.CharField(max_length=200)
 
     class Meta:
         model = Talent
